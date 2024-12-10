@@ -1,0 +1,32 @@
+---
+# - hosts: all
+#   gather_facts: false
+#   tasks:
+#   - name: Include vars of users.yaml
+#     ansible.builtin.include_vars:
+#       file: group_vars/users.yaml
+
+# - hosts: vm_to_deploy:!vm_deployed
+#   gather_facts: false
+#   tasks:
+#     - name: set an optional environment with proxy vars
+#       set_fact:
+#         proxy_env: "{{ {'http_proxy': proxy_url|default(''), 'https_proxy': proxy_url|default(''), 'no_proxy': no_proxy|default('')} if proxy_url is defined and proxy_url != 'not' else {} }}"
+
+- hosts: cluster_to_deploy
+  gather_facts: true
+  connection: local
+  roles:
+  - prereqs
+
+- hosts: cluster_to_deploy
+  gather_facts: false
+  connection: local
+  roles:
+  - deploy-vms
+
+- hosts: cluster_to_deploy
+  gather_facts: false
+  connection: local
+  roles:
+  - install-cluster

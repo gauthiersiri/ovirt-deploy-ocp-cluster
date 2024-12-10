@@ -1,0 +1,47 @@
+- name: Create a k8s namespace
+  kubernetes.core.k8s:
+    name: "{{ project_name }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Create a NetworkAttachmentDefinition
+  kubernetes.core.k8s:
+    state: present
+    template: network-attachment-definition.j2
+
+- name: Create a PVC for the ISO 
+  kubernetes.core.k8s:
+    template: agent-iso-pvc.j2
+    state: present
+
+- name: Create master VMs
+  vars:
+    vm_name: "master{{ vm_index + 1 }}"
+  kubernetes.core.k8s:
+    state: present
+    template: 'ocp-node.j2'
+  loop: "{{ nodes.master }}"
+  loop_control:
+    index_var: vm_index
+
+- name: Create worker VMs
+  vars:
+    vm_name: "worker{{ vm_index + 1 }}"
+  kubernetes.core.k8s:
+    state: present
+    template: 'ocp-node.j2'
+  loop: "{{ nodes.worker }}"
+  loop_control:
+    index_var: vm_index
+
+- name: Create infra VMs
+  vars:
+    vm_name: "infra{{ vm_index + 1 }}"
+  kubernetes.core.k8s:
+    state: present
+    template: 'ocp-node.j2'
+  loop: "{{ nodes.infra }}"
+  loop_control:
+    index_var: vm_index
+  when:  nodes.infra is defined and nodes.infra | length > 0

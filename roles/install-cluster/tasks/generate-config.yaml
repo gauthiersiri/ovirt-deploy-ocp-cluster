@@ -1,0 +1,118 @@
+- name: Get MAC addresses for master VMs
+  command: "oc get vm -n {{ project_name }} master{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
+  register: master_mac_addresses
+  loop: "{{ nodes.master }}"
+  loop_control:
+    index_var: vm_index
+  
+- name: Get MAC addresses for worker VMs
+  command: "oc get vm -n {{ project_name }} worker{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
+  register: worker_mac_addresses
+  loop: "{{ nodes.worker }}"
+  loop_control:
+    index_var: vm_index
+
+- name: Get MAC addresses for infra VMs
+  command: "oc get vm -n {{ project_name }} infra{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
+  register: infra_mac_addresses
+  loop: "{{ nodes.infra }}"
+  loop_control:
+    index_var: vm_index
+  when:  nodes.infra is defined and nodes.infra | length > 0
+
+- name: initialize macs array
+  set_fact:
+    macs_master: "{{ macs_master | default([]) }}"
+    macs_worker: "{{ macs_worker | default([]) }}"
+    macs_infra: "{{ macs_infra | default([]) }}"
+    masters: []
+    workers: []
+    infras: []
+    allworkers: []
+
+- name: Build array with master mac_addresses
+  set_fact:
+    macs_master: "{{ macs_master + [ {'mac': item.stdout} ]}}"
+  loop: "{{ master_mac_addresses.results }}"
+
+- name:  Build array with worker mac_addresses
+  set_fact:
+    macs_worker: "{{ macs_worker + [ {'mac': item.stdout} ]}}"
+  loop: "{{ worker_mac_addresses.results }}"
+
+- name:  Build array with infra mac_addresses
+  set_fact:
+    macs_infra : "{{ macs_infra + [ {'mac': item.stdout} ]}}"
+  loop: "{{ infra_mac_addresses.results }}"
+  when:  nodes.infra is defined and nodes.infra | length > 0
+
+
+- name: Display updated master dictionary
+  debug:
+    var: macs_master
+
+- name: Display updated worker dictionary
+  debug:
+    var: macs_worker
+
+- name: Display updated infra dictionary
+  debug:
+    var: macs_infra
+
+- name: Update master dictionary with MAC addresses
+  set_fact:
+    masters: "{{ nodes.master | zip(macs_master) | map('combine') | list }}"
+
+- name: Update worker dictionary with MAC addresses
+  set_fact:
+    workers: "{{ nodes.worker | zip(macs_worker) | map('combine') | list }}"
+
+- name: Update infra dictionary with MAC addresses
+  set_fact:
+    infras: "{{ nodes.infra | zip(macs_infra) | map('combine') | list }}"
+  when:  nodes.infra is defined and nodes.infra | length > 0
+
+- name: Merge workers and infra dictionary with MAC addresses
+  set_fact:
+    allworkers: "{{ workers + infras }}"
+
+- name: Display updated master dictionary
+  debug:
+    var: masters
+
+- name: Display updated worker dictionary
+  debug:
+    var: workers
+
+- name: Display updated infra dictionary
+  debug:
+    var: infras
+  when:  nodes.infra is defined and nodes.infra | length > 0
+
+- name: Display updated allworkers dictionary
+  debug:
+    var: allworkers
+
+- name: Create agent-config.yaml from template to install-dir
+  template:
+    src: "agent-config.j2"
+    dest: "{{ playbook_dir }}/install-dir/agent-config.yaml"
+    mode: '0664'
+
+- name: Create install-config.yaml from template to install-dir
+  template:
+    src: "install-config.yaml.j2"
+    dest: "{{ playbook_dir }}/install-dir/install-config.yaml"
+    mode: '0664'
+
+- name: Backup the agent-config.yaml file
+  copy:
+    src: "{{ playbook_dir }}/install-dir/agent-config.yaml"
+    dest: "{{ playbook_dir }}/install-dir/agent-config.yaml.orig"
+    mode: '0664'
+
+- name: Backup the install-config.yaml file
+  copy:
+    src: "{{ playbook_dir }}/install-dir/install-config.yaml"
+    dest: "{{ playbook_dir }}/install-dir/install-config.yaml.orig"
+    mode: '0664'

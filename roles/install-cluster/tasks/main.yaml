@@ -1,0 +1,11 @@
+- name: Generate configs
+  ansible.builtin.include_tasks: generate-config.yaml
+
+- name: Generate iso
+  ansible.builtin.include_tasks: generate-iso.yaml
+
+- name: Start nodes
+  ansible.builtin.include_tasks: start-nodes.yaml
+
+- name: Finish install
+  ansible.builtin.include_tasks: finish-install.yaml

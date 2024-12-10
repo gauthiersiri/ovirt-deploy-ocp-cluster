@@ -1,0 +1,74 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ vm_name }}.{{ config.cluster_name }}.{{ config.base_domain }}
+  namespace: {{ project_name }}
+spec:
+  running: false
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: "{{ vm_name }}-rootdisk"
+      spec:
+        source:
+          blank: {}    
+        storage:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: "{{ item.disk_size_gb}}Gi"
+          storageClassName: {{ ovirt.storage_class }}
+  template:
+    spec:
+      evictionStrategy: LiveMigrateIfPossible
+      architecture: amd64
+      domain:
+        cpu:
+          cores: {{ item.cpu / 2 }}
+          sockets: 2
+          threads: 1
+          model: Westmere
+        devices:
+          disks:
+            - bootOrder: 1
+              disk:
+                bus: virtio
+              name: rootdisk
+            - bootOrder: 2
+              cdrom:
+                bus: sata
+              name: installation-cdrom
+          interfaces:
+            - bridge: {}
+              model: virtio
+              name: default
+          logSerialConsole: false
+          networkInterfaceMultiqueue: false
+          rng: {}
+        features:
+          acpi: {}
+          smm:
+            enabled: false
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: false
+        machine:
+          type: pc-q35-rhel9.2.0
+        memory:
+          guest: "{{ item.ram_gb }}Gi"
+        resources: {}
+      networks:
+        - multus:
+            networkName: {{ project_name }}-{{ ovirt.bridge }}
+          name: default
+      terminationGracePeriodSeconds: 180
+      volumes:
+        - dataVolume:
+            name: "{{ vm_name }}-rootdisk"
+          name: rootdisk
+        - name: installation-cdrom
+          persistentVolumeClaim:
+            claimName: agent-iso-{{ config.cluster_name }}-pvc

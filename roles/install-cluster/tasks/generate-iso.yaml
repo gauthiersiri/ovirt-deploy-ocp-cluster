@@ -1,0 +1,5 @@
+- name: Generate ISO
+  command: "{{ playbook_dir }}/bin/openshift-install --dir={{ playbook_dir }}/install-dir agent create image --log-level debug" 
+
+- name: Upload ISO
+  command: "{{ playbook_dir }}/bin/virtctl -n {{ project_name }} image-upload pvc agent-iso-{{ config.cluster_name }}-pvc --image-path={{ playbook_dir }}/install-dir/agent.x86_64.iso --no-create" 

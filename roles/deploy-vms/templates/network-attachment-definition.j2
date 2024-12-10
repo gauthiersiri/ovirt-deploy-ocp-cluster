@@ -1,0 +1,7 @@
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+    name: "{{ project_name }}-{{ ovirt.bridge }}"
+    namespace: "{{ project_name }}"
+spec:
+    config: '{"name":"{{ project_name }}-{{ ovirt.bridge }}","type":"bridge","cniVersion":"0.3.1","bridge":"{{ ovirt.bridge }}","macspoofchk":true,"ipam":{},"preserveDefaultVlan":false}'

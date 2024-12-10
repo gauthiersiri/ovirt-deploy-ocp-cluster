@@ -1,0 +1,56 @@
+---
+project_name: "gauth"
+
+# ovrit cluster
+ovirt:
+  hostname: "https://api.ocpvirt.cluster.demo:6443"
+  username: "user"
+  password: "password"
+  bridge: "onn359"
+  storage_class: "svc-sc"
+
+config:
+  provider: none
+  base_domain: cluster.demo
+  cluster_name: "{{ project_name }}" # Can also be in format latest-4.11
+  cluster_version: "stable-4.17"
+  ignition_version: "3.2.0"
+  fips: false
+  #networkType: OVNKubernetes
+  #isolationMode: Multitenant
+  pull_secret: "{{ lookup('file', '~/pullsecret') }}"
+  master_schedulable: false
+  hybrid: false
+
+nodes:
+  master:
+    - { ip: 10.3.59.141, cpu: 8, ram_gb: 16, disk_size_gb: 120 }
+    - { ip: 10.3.59.142, cpu: 8, ram_gb: 16, disk_size_gb: 120 }
+    - { ip: 10.3.59.143, cpu: 8, ram_gb: 16, disk_size_gb: 120 }
+  worker:
+    - { ip: 10.3.59.144, cpu: 8, ram_gb: 16, disk_size_gb: 300 }
+    - { ip: 10.3.59.145, cpu: 8, ram_gb: 16, disk_size_gb: 300 }
+  infra:
+    - { ip: 10.3.59.146, cpu: 16, ram_gb: 34, disk_size_gb: 300 }
+    - { ip: 10.3.59.147, cpu: 16, ram_gb: 34, disk_size_gb: 300 }
+    - { ip: 10.3.59.148, cpu: 16, ram_gb: 34, disk_size_gb: 300 }
+
+download:
+  clients_url: "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/{{ config.cluster_version }}"
+
+# Network 
+static_ip:
+  gateway: 10.3.59.254
+  netmask: 255.255.255.0
+  dns: 10.3.59.140
+  network_interface_name: eno1
+
+network_modifications:
+  enabled: true
+  clusterNetwork:
+  - cidr: 100.68.0.0/14
+    hostPrefix: 23
+  serviceNetwork:
+  - cidr: 100.66.0.0/15
+  machineNetwork:
+  - cidr: 10.3.59.0/24
