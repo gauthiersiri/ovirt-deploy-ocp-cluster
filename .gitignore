@@ -1,0 +1,14 @@
+group_vars/*
+!group_vars/all.sample
+host_vars/*
+!host_vars/host.sample
+inventory/hosts.*
+.vscode
+group_vars/_old/all.*
+logs_deployed/*
+bin/*
+downloads/*
+install-dir/*
+test*
+node_joiner
+clusters_data
