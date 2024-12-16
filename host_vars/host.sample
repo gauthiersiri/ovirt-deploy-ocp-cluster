@@ -4,6 +4,8 @@ project_name: "gauth"
 # ovrit cluster
 ovirt:
   hostname: "https://api.ocpvirt.cluster.demo:6443"
+  # Use username/password or token, not both
+  token: "sha256~fa1VAIMQsoSSkfjdshflkjsqhfkjdsfhdkjf"
   username: "user"
   password: "password"
   bridge: "onn359"
@@ -11,9 +13,9 @@ ovirt:
 
 config:
   provider: none
-  base_domain: cluster.demo
-  cluster_name: "{{ project_name }}" # Can also be in format latest-4.11
-  cluster_version: "stable-4.17"
+  base_domain: cluster.demo 
+  cluster_name: "{{ project_name }}" 
+  cluster_version: "stable-4.17"    # Can also be in format latest-4.11
   ignition_version: "3.2.0"
   fips: false
   #networkType: OVNKubernetes

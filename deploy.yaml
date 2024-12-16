@@ -30,3 +30,9 @@
   connection: local
   roles:
   - install-cluster
+
+- hosts: cluster_to_deploy:!cluster_deployed
+  gather_facts: false
+  connection: local
+  roles:
+  - role: save-inventory

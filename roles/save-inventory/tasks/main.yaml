@@ -1,0 +1,15 @@
+- name: Add all hosts running this playbook to the done group
+  ansible.builtin.add_host:
+    name: '{{ item }}'
+    groups: cluster_deployed
+    # ansible_ssh_user: "{{ hostvars[item].post_prov.user }}"
+    # ansible_host: "{{ hostvars[item].vm.ip }}"
+  loop: "{{ ansible_play_hosts }}"
+
+- name: Create inventory
+  template:
+    src: hosts.j2
+    dest: ./inventory/hosts
+    backup: true
+  delegate_to: localhost
+  run_once: true
