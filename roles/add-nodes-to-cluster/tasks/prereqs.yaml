@@ -1,0 +1,27 @@
+# - name: Download the openshift-install binary
+#   get_url:
+#     url: "{{ download.openshiftInstall }}"
+#     dest: "{{ cluster_data_dir }}/downloads/openshift_install.tar.gz"
+#     force: true
+#     validate_certs: no
+#   register: openshift_install_download
+
+
+
+- name: Create node-joiner directory
+  file:
+    path: "{{ cluster_data_dir }}/install-dir/node-joiner"
+    state: directory
+    mode: '0755'
+
+- name: Copy node-joiner.sh with permissions
+  ansible.builtin.copy:
+    src: node-joiner.sh
+    dest: "{{ cluster_data_dir }}/install-dir/node-joiner/node-joiner.sh"
+    mode: '0755'
+
+- name: Copy node-joiner-monitor.sh with permissions
+  ansible.builtin.copy:
+    src: node-joiner-monitor.sh
+    dest: "{{ cluster_data_dir }}/install-dir/node-joiner/node-joiner-monitor.sh"
+    mode: '0755'

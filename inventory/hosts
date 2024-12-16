@@ -1,5 +1,9 @@
 [cluster_deployed]
-
+chaocp.mop.ibm
 
 [cluster_to_deploy]
-gauth.mop.ibm
+chaocp.mop.ibm
+gauthocp.mop.ibm
+
+[cluster_to_add_node]
+gauthocp.mop.ibm

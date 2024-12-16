@@ -1,0 +1,95 @@
+- hosts: cluster_to_add_node
+  gather_facts: true
+  connection: local
+  vars:
+    keep_cluster_install_dir: true
+  roles:
+  - prereqs
+
+- hosts: cluster_to_add_node
+  gather_facts: true
+  connection: local
+  tasks:
+  - name: Check if {{ cluster_data_dir }}/install-dir/auth/kubeconfig exists
+    ansible.builtin.stat:
+      path: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+    register: kubeconfig_status
+
+  - name: Kubeconfig doesn't exist. Login using token.
+    block:
+      - name: Fails if config.token doesn't exist.
+        fail:
+          msg: "Cluster kubeconfig doesn't exist and config.token is not set. Cannot connect to {{ config.cluster_name }}.{{ config.base_domain }} to add nodes."
+        when: config.token is not defined
+      - name: Create node-joiner directory
+        file:
+          path: "{{ cluster_data_dir }}/install-dir/auth"
+          state: directory
+          mode: '0755'
+      - name: Connect to Openshift cluster {{ config.cluster_name }}.{{ config.base_domain }}
+        environment:
+          KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+        ansible.builtin.command: "{{ cluster_data_dir }}/bin/oc login --token={{ config.token }}  --server https://api.{{ config.cluster_name }}.{{ config.base_domain }}:6443 --insecure-skip-tls-verify=true"
+        register: result
+    when: not kubeconfig_status.stat.exists
+
+
+
+- hosts: cluster_to_add_node
+  gather_facts: false
+  connection: local
+  tasks:
+  - name: Init nodes to create
+    ansible.builtin.set_fact:
+      nodes_to_add:
+        master: []
+        worker: []
+        infra: []
+  
+  - name: call role with vars
+    ansible.builtin.import_role: 
+      name: "gather-nodes-to-add"
+  
+  # - name: Add 'created' property to each element in nodes dictionary
+  #   set_fact:
+  #     nodes: >-
+  #       {{ nodes | combine({
+  #         item: nodes[item] | map('combine', {'created': true}) | list
+  #       }) }}
+  #   loop: "{{ nodes | dict2items | map(attribute='key') | list }}"
+  # - name: Add 'name' property to each element in nodes dictionary
+  #   set_fact:
+  #     nodes: >-
+  #       {%- set updated_nodes = {} -%}
+  #         {%- for key, value in nodes.items() -%}
+  #           {%- set updated_list = [] -%}
+  #           {%- for item in value -%}
+  #             {%- set _ = updated_list.append(item | combine({'name': key ~ loop.index ~ '.' ~ config.cluster_name ~ '.' ~ config.base_domain})) -%}
+  #           {%- endfor -%}
+  #           {%- set _ = updated_nodes.update({key: updated_list}) -%}
+  #         {%- endfor -%}
+  #         {{ updated_nodes  }}    
+# - hosts: cluster_to_add_node
+#   gather_facts: false
+#   connection: local
+#   tasks:
+#   - name: Display final array
+#     ansible.builtin.debug:
+#       var: nodes_to_add
+
+
+
+
+
+- hosts: cluster_to_add_node
+  gather_facts: true
+  connection: local
+  vars:
+    masters: []
+    infras: "{{ nodes_to_add.infra }}"
+    workers: "{{ nodes_to_add.worker }}"
+    iso_pvc_name: "agent-iso-{{ config.cluster_name }}-addnode-{{ '%Y%m%d%H%M%S' | strftime(ansible_date_time.epoch) }}-pvc"
+  roles:
+  - deploy-vms
+  - add-nodes-to-cluster
+    

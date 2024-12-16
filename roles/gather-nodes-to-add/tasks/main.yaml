@@ -1,0 +1,11 @@
+- name: Gather workers to add
+  vars:
+    node_type: worker
+  ansible.builtin.include_tasks: check-vm.yaml
+  loop: "{{ nodes.worker }}"
+
+- name: Gather infras to add
+  vars:
+    node_type: infra
+  ansible.builtin.include_tasks: check-vm.yaml
+  loop: "{{ nodes.infra }}"

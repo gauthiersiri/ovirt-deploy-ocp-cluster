@@ -1,0 +1,25 @@
+# - name: Concatenate all IP addresses
+#   set_fact:
+#     all_ips: "{{ (masters + workers + infras) | json_query('[].ip') | join(' ') }}"  
+
+# - name: Generate ISO with node-joiner
+#   environment:
+#     KUBECONFIG: "{{ playbook_dir }}/install-dir/auth/kubeconfig"
+#   command: "{{ playbook_dir }}/install-dir/node-joiner/node-joiner-monitor.sh {{all_ips }}"
+#   args:
+#     chdir: "{{ playbook_dir }}/install-dir/node-joiner"
+
+- name: Set count of all nodes
+  set_fact:
+    nodes_count: "{{ nodes | dict2items | map(attribute='value') | map('length') | sum }}"
+
+- name: Approve csrs for new  until we have a total of {{ nodes_count }} nodes
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+  shell: |
+    oc get csr -o name | xargs oc adm certificate approve &> /dev/null
+    oc get nodes | grep -w Ready | wc -l
+  register: result
+  until: result.stdout == nodes_count
+  retries: 150
+  delay: 10

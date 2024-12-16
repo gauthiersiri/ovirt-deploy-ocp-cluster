@@ -1,0 +1,16 @@
+- name: check if vm  {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} exists on ovirt cluster
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  command: "oc get vm -n {{ project_name }} {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+  register: vm_output
+  ignore_errors: true
+
+# - name: display result content
+#   ansible.builtin.debug:
+#     var: worker
+#   when: worker.rc != 0
+
+- name: add {{ item.name }} to the list of {{ node_type }} to add
+  ansible.builtin.set_fact:
+    nodes_to_add: "{{ nodes_to_add | combine({node_type: nodes_to_add[node_type] + [item]}) }}"
+  when: vm_output.rc != 0  
