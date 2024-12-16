@@ -56,4 +56,9 @@ In the host vars file (located in *host_vars* directory), add the new nodes to `
 ```
 
 ### Add cluster authentication token
-If cluster authentication kubeconfig  created during initial deployment (located in *clusters_data/gauthocp/install-dir/auth/kubeconfig*) doesn't exist, you need to provide an authentication token
+If cluster authentication kubeconfig  created during initial deployment (located in *clusters_data/gauthocp/install-dir/auth/kubeconfig*) doesn't exist, you need to provide an authentication token.
+
+### Run the playbook
+```bash
+ansible-playbook add_node.yaml
+```
