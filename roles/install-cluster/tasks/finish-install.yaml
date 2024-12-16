@@ -58,7 +58,7 @@
                 node-role.kubernetes.io/infra: ""
 
 - name: Wait for install complete
-  command: openshift-install agent wait-for install-complete --dir={{ cluster_data_dir }}/install-dir --log-level debug # noqa 301
+  command: "{{ cluster_data_dir }}/bin/openshift-install agent wait-for install-complete --dir={{ cluster_data_dir }}/install-dir --log-level debug" # noqa 301
   register: result_complete
   until: result_complete.rc == 0
   retries: 3
