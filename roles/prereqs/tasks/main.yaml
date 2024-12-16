@@ -166,10 +166,24 @@
       - README.md
   when: openshift_install_download is changed
 
-- name: Connect to Openshift Virtualization cluster {{ ovirt.hostname }}
+- name: Connect to Openshift Virtualization cluster {{ ovirt.hostname }} using token
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  ansible.builtin.command: "{{ cluster_data_dir }}/bin/oc login --token {{ ovirt.token }} --server {{ ovirt.hostname }} --insecure-skip-tls-verify=true"
+  register: result
+  when: ovirt.token is defined
+
+- name: Connect to Openshift Virtualization cluster {{ ovirt.hostname }} using user/password
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   ansible.builtin.command: "{{ cluster_data_dir }}/bin/oc login -u {{ ovirt.username }} -p {{ ovirt.password }} --server {{ ovirt.hostname }} --insecure-skip-tls-verify=true"
+  register: result
+  when: ovirt.username is defined and ovirt.password is defined
+
+- name: Test connectivity to Openshift Virtualization cluster {{ ovirt.hostname }}
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  ansible.builtin.command: "{{ cluster_data_dir }}/bin/oc get nodes"
   register: result
   # retries: 100
   # delay: 10    
