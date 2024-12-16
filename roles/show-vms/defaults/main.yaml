@@ -1,0 +1,5 @@
+masters: "{{ nodes.master | default([])}}"
+infras: "{{ nodes.infra | default([]) }}"
+workers: "{{ nodes.worker | default([]) }}"
+
+iso_pvc_name: "agent-iso-{{ config.cluster_name }}-pvc"

@@ -1,0 +1,16 @@
+- name: show master VMs
+  debug:
+    var: masters
+
+- name: show infras VMs
+  debug:
+    var: infras
+
+- name: show workers VMs
+  debug:
+    var: workers
+    
+- name: show iso pvc
+  debug:
+    var: iso_pvc_name
+
