@@ -1,16 +1,30 @@
-- name: Wait for bootstrap to complete prior to starting workers
-  command: "{{ playbook_dir }}/bin/openshift-install --dir={{ playbook_dir }}/install-dir agent wait-for bootstrap-complete --log-level debug" # noqa 301
+- name: Wait for bootstrap to complete
+  command: "{{ cluster_data_dir }}/bin/openshift-install --dir={{ cluster_data_dir }}/install-dir agent wait-for bootstrap-complete --log-level debug" # noqa 301
   retries: 180
   delay: 10
   register: result_bootstrap
   until: result_bootstrap.rc == 0
+
+- name: Set count of all nodes
+  set_fact:
+    nodes_count: "{{ nodes | dict2items | map(attribute='value') | map('length') | sum }}"
+
+- name: Wait for all nodes to be ready
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+  shell: |
+    oc get nodes | grep -w Ready | wc -l
+  register: result
+  until: result.stdout == nodes_count
+  retries: 180
+  delay: 10
 
 - name: Setup Infra nodes
   when: nodes.infra is defined and nodes.infra | length > 0
   block:
     - name: Check for infra nodes and label accordingly
       environment:
-       KUBECONFIG: "{{ playbook_dir }}/install-dir/auth/kubeconfig"
+       KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
       k8s:
        state: patched
        merge_type: merge
@@ -27,7 +41,7 @@
     
     - name: Change ingress controller node selector
       environment:
-       KUBECONFIG: "{{ playbook_dir }}/install-dir/auth/kubeconfig"
+       KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
       k8s:
        state: patched
        merge_type: merge
@@ -44,7 +58,7 @@
                 node-role.kubernetes.io/infra: ""
 
 - name: Wait for install complete
-  command: openshift-install agent wait-for install-complete --dir={{ playbook_dir }}/install-dir --log-level debug # noqa 301
+  command: openshift-install agent wait-for install-complete --dir={{ cluster_data_dir }}/install-dir --log-level debug # noqa 301
   register: result_complete
   until: result_complete.rc == 0
   retries: 3

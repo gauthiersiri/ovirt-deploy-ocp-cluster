@@ -1,7 +1,7 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: {{ vm_name }}.{{ config.cluster_name }}.{{ config.base_domain }}
+  name: {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}
   namespace: {{ project_name }}
 spec:
   running: false
@@ -9,7 +9,7 @@ spec:
     - apiVersion: cdi.kubevirt.io/v1beta1
       kind: DataVolume
       metadata:
-        name: "{{ vm_name }}-rootdisk"
+        name: "{{ item.name }}-rootdisk"
       spec:
         source:
           blank: {}    
@@ -67,8 +67,8 @@ spec:
       terminationGracePeriodSeconds: 180
       volumes:
         - dataVolume:
-            name: "{{ vm_name }}-rootdisk"
+            name: "{{ item.name }}-rootdisk"
           name: rootdisk
         - name: installation-cdrom
           persistentVolumeClaim:
-            claimName: agent-iso-{{ config.cluster_name }}-pvc
+            claimName: {{ iso_pvc_name }}

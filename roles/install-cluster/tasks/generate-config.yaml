@@ -1,23 +1,23 @@
 - name: Get MAC addresses for master VMs
-  command: "oc get vm -n {{ project_name }} master{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  command: "oc get vm -n {{ project_name }} {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
   register: master_mac_addresses
   loop: "{{ nodes.master }}"
-  loop_control:
-    index_var: vm_index
   
 - name: Get MAC addresses for worker VMs
-  command: "oc get vm -n {{ project_name }} worker{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  command: "oc get vm -n {{ project_name }} {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
   register: worker_mac_addresses
   loop: "{{ nodes.worker }}"
-  loop_control:
-    index_var: vm_index
 
 - name: Get MAC addresses for infra VMs
-  command: "oc get vm -n {{ project_name }} infra{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  command: "oc get vm -n {{ project_name }} {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
   register: infra_mac_addresses
   loop: "{{ nodes.infra }}"
-  loop_control:
-    index_var: vm_index
   when:  nodes.infra is defined and nodes.infra | length > 0
 
 - name: initialize macs array
@@ -96,23 +96,23 @@
 - name: Create agent-config.yaml from template to install-dir
   template:
     src: "agent-config.j2"
-    dest: "{{ playbook_dir }}/install-dir/agent-config.yaml"
+    dest: "{{ cluster_data_dir }}/install-dir/agent-config.yaml"
     mode: '0664'
 
 - name: Create install-config.yaml from template to install-dir
   template:
     src: "install-config.yaml.j2"
-    dest: "{{ playbook_dir }}/install-dir/install-config.yaml"
+    dest: "{{ cluster_data_dir }}/install-dir/install-config.yaml"
     mode: '0664'
 
 - name: Backup the agent-config.yaml file
   copy:
-    src: "{{ playbook_dir }}/install-dir/agent-config.yaml"
-    dest: "{{ playbook_dir }}/install-dir/agent-config.yaml.orig"
+    src: "{{ cluster_data_dir }}/install-dir/agent-config.yaml"
+    dest: "{{ cluster_data_dir }}/install-dir/agent-config.yaml.orig"
     mode: '0664'
 
 - name: Backup the install-config.yaml file
   copy:
-    src: "{{ playbook_dir }}/install-dir/install-config.yaml"
-    dest: "{{ playbook_dir }}/install-dir/install-config.yaml.orig"
+    src: "{{ cluster_data_dir }}/install-dir/install-config.yaml"
+    dest: "{{ cluster_data_dir }}/install-dir/install-config.yaml.orig"
     mode: '0664'

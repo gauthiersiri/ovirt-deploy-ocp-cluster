@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: agent-iso-{{ config.cluster_name }}-pvc
+  name: {{ iso_pvc_name }}
   namespace: "{{ project_name }}"
 spec:
   accessModes:

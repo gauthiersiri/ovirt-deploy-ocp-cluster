@@ -3,6 +3,7 @@
     name: "master{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }}"
     namespace: "{{ project_name }}"
     running: true
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   loop: "{{ nodes.master }}"
   loop_control:
     index_var: vm_index
@@ -12,6 +13,7 @@
     name: "worker{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }}"
     namespace: "{{ project_name }}"
     running: true
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   loop: "{{ nodes.worker }}"
   loop_control:
     index_var: vm_index
@@ -21,6 +23,7 @@
     name: "infra{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }}"
     namespace: "{{ project_name }}"
     running: true
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   loop: "{{ nodes.infra }}"
   loop_control:
     index_var: vm_index

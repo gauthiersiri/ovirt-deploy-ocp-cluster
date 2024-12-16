@@ -4,44 +4,50 @@
     api_version: v1
     kind: Namespace
     state: present
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
 
 - name: Create a NetworkAttachmentDefinition
   kubernetes.core.k8s:
     state: present
     template: network-attachment-definition.j2
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
 
 - name: Create a PVC for the ISO 
   kubernetes.core.k8s:
     template: agent-iso-pvc.j2
     state: present
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
 
 - name: Create master VMs
-  vars:
-    vm_name: "master{{ vm_index + 1 }}"
+  # vars:
+  #   vm_name: "master{{ vm_index + 1 }}"
   kubernetes.core.k8s:
     state: present
     template: 'ocp-node.j2'
-  loop: "{{ nodes.master }}"
-  loop_control:
-    index_var: vm_index
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  loop: "{{ masters }}"
+  # loop_control:
+  #   index_var: vm_index
 
 - name: Create worker VMs
-  vars:
-    vm_name: "worker{{ vm_index + 1 }}"
+  # vars:
+  #   vm_name: "worker{{ vm_index + 1 }}"
   kubernetes.core.k8s:
     state: present
     template: 'ocp-node.j2'
-  loop: "{{ nodes.worker }}"
-  loop_control:
-    index_var: vm_index
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  loop: "{{ workers }}"
+  # loop_control:
+  #   index_var: vm_index
 
 - name: Create infra VMs
-  vars:
-    vm_name: "infra{{ vm_index + 1 }}"
+  # vars:
+  #   vm_name: "infra{{ vm_index + 1 }}"
   kubernetes.core.k8s:
     state: present
     template: 'ocp-node.j2'
-  loop: "{{ nodes.infra }}"
-  loop_control:
-    index_var: vm_index
-  when:  nodes.infra is defined and nodes.infra | length > 0
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  loop: "{{ infras }}"
+  # loop_control:
+  #   index_var: vm_index
+  #when:  nodes.infra is defined and nodes.infra | length > 0

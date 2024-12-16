@@ -13,19 +13,19 @@
 #       set_fact:
 #         proxy_env: "{{ {'http_proxy': proxy_url|default(''), 'https_proxy': proxy_url|default(''), 'no_proxy': no_proxy|default('')} if proxy_url is defined and proxy_url != 'not' else {} }}"
 
-- hosts: cluster_to_deploy
+- hosts: cluster_to_deploy:!cluster_deployed
   gather_facts: true
   connection: local
   roles:
   - prereqs
 
-- hosts: cluster_to_deploy
+- hosts: cluster_to_deploy:!cluster_deployed
   gather_facts: false
   connection: local
   roles:
   - deploy-vms
 
-- hosts: cluster_to_deploy
+- hosts: cluster_to_deploy:!cluster_deployed
   gather_facts: false
   connection: local
   roles:

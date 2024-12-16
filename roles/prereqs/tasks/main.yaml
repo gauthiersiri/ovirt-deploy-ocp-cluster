@@ -1,3 +1,21 @@
+- name: Define cluster data dir to {{ playbook_dir }}/clusters_data/{{ config.cluster_name }}
+  set_fact:
+    cluster_data_dir: "{{ playbook_dir }}/clusters_data/{{ config.cluster_name }}"
+    
+
+- name: Add 'name' property to each openshift nodes
+  set_fact:
+    nodes: >-
+      {%- set updated_nodes = {} -%}
+      {%- for key, value in nodes.items() -%}
+        {%- set updated_list = [] -%}
+        {%- for item in value -%}
+          {%- set _ = updated_list.append(item | combine({'name': key ~ loop.index })) -%}
+        {%- endfor -%}
+        {%- set _ = updated_nodes.update({key: updated_list}) -%}
+      {%- endfor -%}
+      {{ updated_nodes  }}    
+
 - name: Fetch the content of the sha256sum.txt from the clients downloads page
   uri:
     url: "{{ download.clients_url }}/sha256sum.txt"
@@ -86,21 +104,21 @@
 
 - name: Clean up existing bin, install-dir and downloads folders
   file:
-    path: "{{ playbook_dir }}/{{ item }}"
+    path: "{{ cluster_data_dir }}/{{ item }}"
     state: absent
   with_items: ["bin", "install-dir", "downloads"]
   when: clean is defined
 
 - name: Must always clean install-dir
   file:
-    path: "{{ playbook_dir }}/{{ item }}"
+    path: "{{ cluster_data_dir }}/{{ item }}"
     state: absent
   with_items: ["install-dir"]
-  when: clean is not defined
+  when: clean is not defined and keep_cluster_install_dir is false
 
 - name: Create bin, install-dir and downloads folders
   file:
-    path: "{{ playbook_dir }}/{{ item }}"
+    path: "{{ cluster_data_dir }}/{{ item }}"
     state: directory
     mode: '0755'
   with_items: ["bin", "downloads","downloads/ISOs", "install-dir"]
@@ -108,7 +126,7 @@
 - name: Download the oc client binary
   get_url:
     url: "{{ download.openshiftClient }}"
-    dest: "{{ playbook_dir }}/downloads/oc_client.tar.gz"
+    dest: "{{ cluster_data_dir }}/downloads/oc_client.tar.gz"
     force: true
     validate_certs: no
   register: oc_client_download
@@ -116,7 +134,7 @@
 - name: Download the openshift-install binary
   get_url:
     url: "{{ download.openshiftInstall }}"
-    dest: "{{ playbook_dir }}/downloads/openshift_install.tar.gz"
+    dest: "{{ cluster_data_dir }}/downloads/openshift_install.tar.gz"
     force: true
     validate_certs: no
   register: openshift_install_download
@@ -124,7 +142,7 @@
 - name: Download the virtctl binary
   get_url:
     url: "{{ download.virtctlClient }}"
-    dest: "{{ playbook_dir }}/bin/virtctl"
+    dest: "{{ cluster_data_dir }}/bin/virtctl"
     mode: '0775'
     force: true
     validate_certs: no
@@ -132,8 +150,8 @@
 
 - name: Unarchive oc client
   unarchive:
-    src: "{{ playbook_dir }}/downloads/oc_client.tar.gz"
-    dest: "{{ playbook_dir }}/bin"
+    src: "{{ cluster_data_dir }}/downloads/oc_client.tar.gz"
+    dest: "{{ cluster_data_dir }}/bin"
     mode: '0775'
     exclude:
       - README.md
@@ -141,29 +159,17 @@
 
 - name: Unarchive openshift-install
   unarchive:
-    src: "{{ playbook_dir }}/downloads/openshift_install.tar.gz"
-    dest: "{{ playbook_dir }}/bin"
+    src: "{{ cluster_data_dir }}/downloads/openshift_install.tar.gz"
+    dest: "{{ cluster_data_dir }}/bin"
     mode: '0775'
     exclude:
       - README.md
   when: openshift_install_download is changed
 
-
-
-# - name: Copy install-config.yaml file into install-dir
-#   template:
-#     src: "{{ playbook_dir }}/roles/common/templates/install-config.yaml.j2"
-#     dest: "{{ playbook_dir }}/install-dir/install-config.yaml"
-#     mode: '0664'
-
-# - name: Run steps pertaining to proxy, if any
-#   include_tasks: handle_proxy.yml
-#   when:
-#     - proxy is defined
-#     - proxy.enabled == true # noqa 601
-
-# - name: Backup the install-config.yaml file
-#   copy:
-#     src: "{{ playbook_dir }}/install-dir/install-config.yaml"
-#     dest: "{{ playbook_dir }}/install-dir/install-config.yaml.orig"
-#     mode: '0664'
+- name: Connect to Openshift Virtualization cluster {{ ovirt.hostname }}
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  ansible.builtin.command: "{{ cluster_data_dir }}/bin/oc login -u {{ ovirt.username }} -p {{ ovirt.password }} --server {{ ovirt.hostname }} --insecure-skip-tls-verify=true"
+  register: result
+  # retries: 100
+  # delay: 10    

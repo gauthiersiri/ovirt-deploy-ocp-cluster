@@ -7,7 +7,7 @@ additionalNTPSources:
   - {{ static_ip.gateway }}
 hosts:
 {% for item in masters %}
-  - hostname: master{{ loop.index }}.{{ config.cluster_name }}.{{ config.base_domain }}
+  - hostname: {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}
     role: master
     interfaces:
       - name: eno1
@@ -37,7 +37,7 @@ hosts:
 {% endfor %}
 {% if workers is defined %}
 {% for item in workers %}
-  - hostname: worker{{ loop.index }}.{{ config.cluster_name }}.{{ config.base_domain }}
+  - hostname: {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}
     role: worker
     interfaces:
       - name: eno1
@@ -68,7 +68,7 @@ hosts:
 {% endif %}
 {% if infras is defined %}
 {% for item in infras %}
-  - hostname: infra{{ loop.index }}.{{ config.cluster_name }}.{{ config.base_domain }}
+  - hostname: {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}
     role: worker
     interfaces:
       - name: eno1
