@@ -1,0 +1,24 @@
+- name: Initialize error count
+  set_fact:
+    error_count: 0
+
+- name: Fail if openshift is in project name
+  block:
+    - name: Fail if openshift is in project name
+      ansible.builtin.fail:
+        msg: "DO NOT USE openshift in project name"
+      ignore_errors: true
+    - name: Increment error count
+      set_fact:
+        error_count: "{{ error_count | int + 1 }}"
+  when: "'openshift' in project_name"
+
+
+- name: Gather workers to add
+  ansible.builtin.include_tasks: check-vm.yaml
+  loop: "{{ nodes | dict2items  | map(attribute='value') | flatten}}"
+
+- name: "Error(s) found!"
+  ansible.builtin.fail:
+    msg: "{{ error_count }} error(s) found! \nCheck errors above in the log and correct them before deploying the cluster!"
+  when: error_count | int > 0

@@ -20,6 +20,12 @@
   - prereqs
 
 - hosts: cluster_to_deploy:!cluster_deployed
+  gather_facts: true
+  connection: local
+  roles:
+  - precheck
+
+- hosts: cluster_to_deploy:!cluster_deployed
   gather_facts: false
   connection: local
   roles:

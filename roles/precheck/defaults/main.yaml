@@ -1,0 +1,3 @@
+masters: "{{ nodes.master | default([])}}"
+infras: "{{ nodes.infra | default([]) }}"
+workers: "{{ nodes.worker | default([]) }}"

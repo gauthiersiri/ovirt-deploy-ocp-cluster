@@ -7,6 +7,30 @@
   - prereqs
 
 - hosts: cluster_to_add_node
+  gather_facts: false
+  connection: local
+  tasks:
+  - name: Init nodes to create
+    ansible.builtin.set_fact:
+      nodes_to_add:
+        master: []
+        worker: []
+        infra: []
+  
+  - name: call role with vars
+    ansible.builtin.import_role: 
+      name: "gather-nodes-to-add"
+
+- hosts: cluster_to_deploy:!cluster_deployed
+  gather_facts: true
+  connection: local
+  vars:
+    infras: "{{ nodes_to_add.infra }}"
+    workers: "{{ nodes_to_add.worker }}"
+  roles:
+  - precheck
+
+- hosts: cluster_to_add_node
   gather_facts: true
   connection: local
   tasks:
@@ -35,20 +59,7 @@
 
 
 
-- hosts: cluster_to_add_node
-  gather_facts: false
-  connection: local
-  tasks:
-  - name: Init nodes to create
-    ansible.builtin.set_fact:
-      nodes_to_add:
-        master: []
-        worker: []
-        infra: []
-  
-  - name: call role with vars
-    ansible.builtin.import_role: 
-      name: "gather-nodes-to-add"
+
   
   # - name: Add 'created' property to each element in nodes dictionary
   #   set_fact:

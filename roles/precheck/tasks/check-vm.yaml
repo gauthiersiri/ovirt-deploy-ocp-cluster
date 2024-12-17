@@ -1,0 +1,34 @@
+- name: "Check IP {{ item.ip }} not already in use"
+  ansible.builtin.shell: "ping -c1 -w1 {{ item.ip }} > /dev/null; echo $?"
+  register: result_ping
+
+- name: Fail if IP already in use
+  block:
+    - name: "Fail if IP {{ item.ip }} already in use"
+      ansible.builtin.fail:
+        msg: "IP {{ item.ip }} ALREADY IN USE!"
+      ignore_errors: true
+    - name: Increment error count
+      set_fact:
+        error_count: "{{ error_count | int + 1 }}"
+  when: result_ping.stdout == "0"
+
+- name: "Verify vm name {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} does not already exist in ns {{ project_name }}"
+  kubernetes.core.k8s_info:
+    namespace: "{{ project_name }}"
+    kind: VirtualMachine
+    api_version: kubevirt.io/v1
+    name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  register: vm_exists
+
+- name: Fail if VM name already in use
+  block:
+    - name: "Fail if VM name {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} already in use in ns {{ project_name }}"
+      ansible.builtin.fail:
+        msg: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} ALREADY EXISTS!"
+      ignore_errors: true
+    - name: Increment error count
+      set_fact:
+        error_count: "{{ error_count | int + 1 }}"
+  when: vm_exists.resources | length > 0
