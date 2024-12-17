@@ -1,31 +1,26 @@
 - name: Start master nodes
   kubevirt.core.kubevirt_vm:
-    name: "master{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+    name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
     namespace: "{{ project_name }}"
     running: true
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   loop: "{{ nodes.master }}"
-  loop_control:
-    index_var: vm_index
   
 - name: Start worker nodes
   kubevirt.core.kubevirt_vm:
-    name: "worker{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+    name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
     namespace: "{{ project_name }}"
     running: true
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   loop: "{{ nodes.worker }}"
-  loop_control:
-    index_var: vm_index
+  when:  nodes.worker is defined and nodes.worker | length > 0
 
 - name: Start infra nodes
   kubevirt.core.kubevirt_vm:
-    name: "infra{{ vm_index + 1 }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+    name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
     namespace: "{{ project_name }}"
     running: true
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   loop: "{{ nodes.infra }}"
-  loop_control:
-    index_var: vm_index
   when:  nodes.infra is defined and nodes.infra | length > 0
   
