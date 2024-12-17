@@ -17,9 +17,45 @@
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
   shell: |
-    oc get csr -o name | xargs oc adm certificate approve &> /dev/null
+    oc get csr -o name | xargs oc adm certificate approve > /dev/null 2>&1
     oc get nodes | grep -w Ready | wc -l
   register: result
   until: result.stdout == nodes_count
   retries: 150
   delay: 10
+
+- name: Setup Infra nodes
+  when: infras is defined and infras | length > 0
+  block:
+    - name: Check for infra nodes and label accordingly
+      environment:
+       KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+      k8s:
+       state: patched
+       merge_type: merge
+       definition:
+         apiVersion: v1
+         kind: Node
+         metadata:
+           name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+           labels:
+             node-role.kubernetes.io/infra: ""
+      loop: "{{ infras }}"
+    
+    - name: Change ingress controller node selector
+      environment:
+       KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+      k8s:
+       state: patched
+       merge_type: merge
+       definition:
+         apiVersion: "operator.openshift.io/v1"
+         kind: IngressController
+         metadata:
+           name: default
+           namespace: openshift-ingress-operator
+         spec:
+          nodePlacement:
+            nodeSelector:
+              matchLabels:
+                node-role.kubernetes.io/infra: ""
