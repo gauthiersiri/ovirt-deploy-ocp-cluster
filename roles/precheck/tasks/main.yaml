@@ -13,10 +13,38 @@
         error_count: "{{ error_count | int + 1 }}"
   when: "'openshift' in project_name"
 
+- name: Create flatten node list
+  ansible.builtin.set_fact:
+    flattened_nodes: "{{ nodes | dict2items  | map(attribute='value') | flatten}}"
 
-- name: Gather workers to add
+- name: Get list of duplicate IP addresses
+  set_fact:
+    all_ips: "{{ flattened_nodes | map(attribute='ip') | list }}"
+    unique_ips: "{{ flattened_nodes | map(attribute='ip') | unique | list }}"
+
+- name: Count identical ip adresses
+  set_fact:
+    ip_counter: "{{ all_ips|community.general.counter }}"
+
+- name: Select identical ip adresses
+  set_fact:
+    duplicate_list: "{{ ip_counter|dict2items|selectattr('value', '>', 1)|map(attribute='key') }}"
+
+- name: Fail if duplicate IP addresses are found
+  block:
+    - name: Fail if duplicate IP addresses are found
+      fail:
+        msg: "Duplicate IP addresses found in the nodes list => {{ duplicate_list |join(', ') }}"
+      ignore_errors: true
+    - name: Increment error count
+      set_fact:
+        error_count: "{{ error_count | int + 1 }}"
+  when: duplicate_list | length > 0
+
+
+- name: Gather flattened list of all nodes
   ansible.builtin.include_tasks: check-vm.yaml
-  loop: "{{ nodes | dict2items  | map(attribute='value') | flatten}}"
+  loop: "{{ flattened_nodes }}"
 
 - name: "Error(s) found!"
   ansible.builtin.fail:
