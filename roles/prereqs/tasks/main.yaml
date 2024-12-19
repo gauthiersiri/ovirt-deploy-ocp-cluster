@@ -31,6 +31,10 @@
 - name: Set fact for mac vs linux binaries to download
   set_fact:
     family: "{{ 'mac' if ansible_os_family == 'Darwin' else 'linux' }}"
+    virtctl_family: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
+    #{ "armv6l": "armhf", "armv7l": "armhf", "aarch64": "arm64", "x86_64": "amd64", "i386": "i386" }
+    #kubevirt_arch: '{{ {"x86_64": "a", "string2": "b"}[ansible_architecture] | default("") }}'
+    virtctl_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
 
 - name:  Set the download facts for localhost, which will be used later
   set_fact:
@@ -39,8 +43,8 @@
   loop:
     - { key: "openshiftClient", value: "{{ download.clients_url }}/{{ clients_content.content | regex_search('openshift-client-' + family + '-.*.tar.gz') }}" }
     - { key: "openshiftInstall", value: "{{ download.clients_url }}/{{ clients_content.content | regex_search('openshift-install-' + family + '-.*.tar.gz') }}" }
-    - { key: "virtctlClient", value: "https://github.com/kubevirt/kubevirt/releases/download/{{ virtctl_content.content | trim }}/virtctl-{{ virtctl_content.content | trim }}-{{ ansible_os_family }}-{{ ansible_architecture }}" }
-    # - { key: "virtctlClient", value: "https://github.com/kubevirt/kubevirt/releases/download/{{ virtctl_content.content | trim }}/virtctl-{{ virtctl_content.content | trim }}-linux-amd64" }
+    - { key: "virtctlClient", value: "https://github.com/kubevirt/kubevirt/releases/download/{{ virtctl_content.content | trim }}/virtctl-{{ virtctl_content.content | trim }}-{{ virtctl_family }}-{{ virtctl_arch }}" }
+     #- { key: "virtctlClient", value: "https://github.com/kubevirt/kubevirt/releases/download/{{ virtctl_content.content | trim }}/virtctl-{{ virtctl_content.content | trim }}-linux-amd64" }
 
 - name: Make sure networkType is valid when defined
   assert:
