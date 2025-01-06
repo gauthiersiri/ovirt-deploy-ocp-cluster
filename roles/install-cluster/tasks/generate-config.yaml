@@ -109,6 +109,21 @@
     dest: "{{ cluster_data_dir }}/install-dir/install-config.yaml"
     mode: '0664'
 
+- name: Create openshift directory for addtional manifest
+  file:
+    path: "{{ cluster_data_dir }}/install-dir/openshift"
+    state: directory
+    mode: '0755'
+  when: config.extra_manifests is defined and config.extra_manifests | length > 0
+
+- name: Create extra manifests to the openshft subdirectory
+  copy:
+    src: "manifests/{{ item }}"
+    dest: "{{ cluster_data_dir }}/install-dir/openshift"
+    mode: '0664'
+  loop: "{{ config.extra_manifests }}"
+  when: config.extra_manifests is defined and config.extra_manifests | length > 0
+
 - name: Backup the agent-config.yaml file
   copy:
     src: "{{ cluster_data_dir }}/install-dir/agent-config.yaml"

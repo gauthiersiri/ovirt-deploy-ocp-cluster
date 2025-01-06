@@ -1,0 +1,18 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 99-ibm-2145-non-rotational
+spec:
+  config:
+    ignition:
+      version: 2.2.0
+    storage:
+      files:
+        - path: /etc/udev/rules.d/99-ibm-2145-non-rotational.rules
+          mode: 420
+          filesystem: root
+          contents:
+            source: data:,%23%20Set%20rotational%20to%200%20for%20IBM%202145%20devices%0ASUBSYSTEM%3D%3D%22block%22%2C%20ACTION%3D%3D%22add%7Cchange%22%2C%20ENV%7BID_VENDOR%7D%3D%3D%22IBM%22%2CENV%7BID_MODEL%7D%3D%3D%222145%22%2C%20ATTR%7Bqueue%2Frotational%7D%3D%220%22
+            verification: {}
