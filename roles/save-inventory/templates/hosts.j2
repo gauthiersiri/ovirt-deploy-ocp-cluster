@@ -4,7 +4,6 @@
 {% for host_name in groups[group] %}
 {# {{ host_name }} {% if "ansible_host" in  hostvars[host_name]%}ansible_host={{ hostvars[host_name]['ansible_host'] }}{%endif%} {% if "ansible_ssh_user" in  hostvars[host_name]%}ansible_ssh_user={{ hostvars[host_name]['ansible_ssh_user'] }}{%endif%} #}
 {{ host_name }}
-
 {% endfor %}
 
 {% endif %}
