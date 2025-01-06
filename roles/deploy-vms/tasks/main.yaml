@@ -27,6 +27,27 @@
     state: present
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
 
+- name: Create ODF PVCs for the ISO (worker / infra only)
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: "{{ item.name }}-odf-osd-1"
+        namespace: "{{ project_name }}"
+      spec:
+        accessModes:
+          - ReadWriteMany
+        volumeMode: Block
+        storageClassName: "{{ ovirt.storage_class }}"
+        resources:
+          requests:
+            storage: "{{ item.odf_disk_size }}Gi"
+    state: present
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  loop: "{{ workers + infras }}"
+  when: item.odf_disk_size is defined
+
 - name: Create master VMs
   kubernetes.core.k8s:
     state: present

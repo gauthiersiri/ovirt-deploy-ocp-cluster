@@ -40,6 +40,11 @@ spec:
               cdrom:
                 bus: sata
               name: installation-cdrom
+{% if item.odf_disk_size is defined %}
+            - lun:
+                bus: scsi
+              name: odf-osd-1
+{% endif %}
           interfaces:
             - bridge: {}
               model: virtio
@@ -72,3 +77,8 @@ spec:
         - name: installation-cdrom
           persistentVolumeClaim:
             claimName: {{ iso_pvc_name }}
+{% if item.odf_disk_size is defined %}
+        - name: odf-osd-1
+          persistentVolumeClaim:
+            claimName: {{ item.name }}-odf-osd-1
+{% endif %}
