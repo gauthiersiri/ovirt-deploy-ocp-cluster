@@ -4,13 +4,12 @@
 
 - name: Fail if IP already in use
   block:
-    - name: "Fail if IP {{ item.ip }} already in use"
-      ansible.builtin.fail:
-        msg: "IP {{ item.ip }} ALREADY IN USE!"
-      ignore_errors: true
     - name: Increment error count
       set_fact:
         error_count: "{{ error_count | int + 1 }}"
+    - name: Add error message
+      set_fact:
+        error_msgs: "{{ error_msgs + ['Error #' + error_count + ': IP ' + item.ip + ' ALREADY IN USE!' ] }}"
   when: result_ping.stdout == "0"
 
 - name: "Verify vm name {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} does not already exist in ns {{ project_name }}"
@@ -24,11 +23,10 @@
 
 - name: Fail if VM name already in use
   block:
-    - name: "Fail if VM name {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} already in use in ns {{ project_name }}"
-      ansible.builtin.fail:
-        msg: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} ALREADY EXISTS!"
-      ignore_errors: true
     - name: Increment error count
       set_fact:
         error_count: "{{ error_count | int + 1 }}"
+    - name: Add error message
+      set_fact:
+        error_msgs: "{{ error_msgs + ['Error #' + error_count + ': ' + item.name + '.' + config.cluster_name + '.' +  config.base_domain + ' ALREADY EXISTS!' ] }}"
   when: vm_exists.resources | length > 0

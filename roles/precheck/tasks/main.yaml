@@ -1,16 +1,16 @@
 - name: Initialize error count
   set_fact:
     error_count: 0
+    error_msgs: []
 
 - name: Fail if openshift is in project name
   block:
-    - name: Fail if openshift is in project name
-      ansible.builtin.fail:
-        msg: "DO NOT USE openshift in project name"
-      ignore_errors: true
     - name: Increment error count
       set_fact:
         error_count: "{{ error_count | int + 1 }}"
+    - name: Add error message
+      set_fact:
+        error_msgs: "{{ error_msgs + ['Error #' + error_count + ': DO NOT USE openshift in project name'] }}"
   when: "'openshift' in project_name"
 
 - name: Create flatten node list
@@ -32,13 +32,12 @@
 
 - name: Fail if duplicate IP addresses are found
   block:
-    - name: Fail if duplicate IP addresses are found
-      fail:
-        msg: "Duplicate IP addresses found in the nodes list => {{ duplicate_list |join(', ') }}"
-      ignore_errors: true
     - name: Increment error count
       set_fact:
         error_count: "{{ error_count | int + 1 }}"
+    - name: Add error message
+      set_fact:
+        error_msgs: "{{ error_msgs + ['Error #' + error_count + ': Duplicate  IP addresses found in the nodes list =>' + duplicate_list  |join(', ') ] }}"
   when: duplicate_list | length > 0
 
 
@@ -48,5 +47,5 @@
 
 - name: "Error(s) found!"
   ansible.builtin.fail:
-    msg: "{{ error_count }} error(s) found! \nCheck errors above in the log and correct them before deploying the cluster!"
+    msg: "{{ error_count }} error(s) found! \n{{ error_msgs | join('\n') | indent(4) }}"
   when: error_count | int > 0
