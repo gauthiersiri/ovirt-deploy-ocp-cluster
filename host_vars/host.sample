@@ -23,6 +23,7 @@ config:
   pull_secret: "{{ lookup('file', '~/pullsecret') }}"
   master_schedulable: false
   hybrid: false
+  root_device: "/dev/vda"
   extra_manifests:
   - 99-ibm-non-rotational
 

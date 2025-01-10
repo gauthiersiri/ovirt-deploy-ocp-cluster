@@ -3,3 +3,4 @@
 # workers: "{{ nodes.worker | default([]) }}"
 
 iso_pvc_name: "agent-iso-{{ config.cluster_name }}-pvc"
+root_device: "{{ config.root_device | default('/dev/vda') }}"

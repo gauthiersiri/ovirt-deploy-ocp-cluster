@@ -9,6 +9,8 @@ hosts:
 {% for item in masters %}
   - hostname: {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}
     role: master
+    rootDeviceHints:
+      deviceName: "{{ root_device }}"
     interfaces:
       - name: eno1
         macAddress: {{ item.mac }}
@@ -39,6 +41,8 @@ hosts:
 {% for item in workers %}
   - hostname: {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}
     role: worker
+    rootDeviceHints:
+      deviceName: "{{ root_device }}"  
     interfaces:
       - name: eno1
         macAddress: {{ item.mac }}
@@ -70,6 +74,8 @@ hosts:
 {% for item in infras %}
   - hostname: {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}
     role: worker
+    rootDeviceHints:
+      deviceName: "{{ root_device }}"    
     interfaces:
       - name: eno1
         macAddress: {{ item.mac }}
