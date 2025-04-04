@@ -40,5 +40,25 @@
 - hosts: cluster_to_deploy:!cluster_deployed
   gather_facts: false
   connection: local
+  tasks:
+    - name: Create list of entries with odf_disk_size property
+      set_fact:
+        odf_nodes: >-
+          {{ nodes | dict2items | map(attribute='value') | flatten | selectattr('odf_disk_size', 'defined') | list }}
+
+    - name: Install ODF
+      vars:
+        odf_nodes: "{{ odf_nodes }}"
+        lso_device_path: "/dev/sda"
+      environment:
+        KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+      ansible.builtin.import_role: 
+        name: "odf"
+      when: odf_nodes | length == 3
+
+- hosts: cluster_to_deploy:!cluster_deployed
+  gather_facts: false
+  connection: local
   roles:
   - role: save-inventory
+
