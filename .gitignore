@@ -12,3 +12,4 @@ install-dir/*
 test*
 node_joiner
 clusters_data
+common_tasks
