@@ -25,8 +25,14 @@
 
 # 3. Wait until the StorageCluster CRD is available
 # -----------------------------------------------------------------------------
-- name: "Wait until the StorageCluster CRD is available"
-  include_tasks: "{{ role_path }}/../../common_tasks/wait_for_crd.yml"
+# - name: "Wait until the StorageCluster CRD is available"
+#   include_tasks: "{{ role_path }}/../../common_tasks/wait_for_crd.yml"
+#   vars:
+#     crd_name: storageclusters.ocs.openshift.io
+- name: "Wait until the LocalVolume CRD is available"
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: wait_for_crd
   vars:
     crd_name: storageclusters.ocs.openshift.io
 

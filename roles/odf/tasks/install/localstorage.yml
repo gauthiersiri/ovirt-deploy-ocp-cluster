@@ -51,11 +51,16 @@
 
 # 3. Wait until the LocalVolume CRD is available
 # -----------------------------------------------------------------------------
+# - name: "Wait until the LocalVolume CRD is available"
+#   include_tasks: "{{ role_path }}/../../common_tasks/wait_for_crd.yml"
+#   vars:
+#     crd_name: localvolumes.local.storage.openshift.io
 - name: "Wait until the LocalVolume CRD is available"
-  include_tasks: "{{ role_path }}/../../common_tasks/wait_for_crd.yml"
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: wait_for_crd
   vars:
     crd_name: localvolumes.local.storage.openshift.io
-
 
 # 4. Label all worker nodes as suitable for storage
 # -----------------------------------------------------------------------------
