@@ -13,6 +13,12 @@ The goal of this playbook is to deloy an Openshift cluster on Openshift Virtuali
 - this workstation should resolves (DNS) the Openshist Virtualization cluster and the Openshift cluster to deploy
 - a pullsecret (by defaut in the user home directory)
 
+- Python packages:
+  - jmespath
+```bash
+pip install -r requirements.yaml
+```
+
 - Ansible collection for the playbook
   - kubernetes.core                          
   - kubevirt.core 
