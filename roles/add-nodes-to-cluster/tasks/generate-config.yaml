@@ -1,9 +1,9 @@
-- name: Get MAC addresses for master VMs
-  environment:
-    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
-  command: "oc get vm -n {{ project_name }} {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
-  register: master_mac_addresses
-  loop: "{{ masters }}"
+# - name: Get MAC addresses for master VMs
+#   environment:
+#     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+#   command: "oc get vm -n {{ project_name }} {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
+#   register: master_mac_addresses
+#   loop: "{{ masters }}"
 
 - name: Get MAC addresses for worker VMs
   environment:
@@ -21,14 +21,14 @@
 
 - name: initialize macs array
   set_fact:
-    macs_master: "{{ macs_master | default([]) }}"
+    # macs_master: "{{ macs_master | default([]) }}"
     macs_worker: "{{ macs_worker | default([]) }}"
     macs_infra: "{{ macs_infra | default([]) }}"
 
-- name: Build array with master mac_addresses
-  set_fact:
-    macs_master: "{{ macs_master + [ {'mac': item.stdout} ]}}"
-  loop: "{{ master_mac_addresses.results }}"
+# - name: Build array with master mac_addresses
+#   set_fact:
+#     macs_master: "{{ macs_master + [ {'mac': item.stdout} ]}}"
+#   loop: "{{ master_mac_addresses.results }}"
 
 - name:  Build array with worker mac_addresses
   set_fact:
@@ -40,9 +40,9 @@
     macs_infra : "{{ macs_infra + [ {'mac': item.stdout} ]}}"
   loop: "{{ infra_mac_addresses.results }}"
 
-- name: Update master dictionary with MAC addresses
-  set_fact:
-    masters: "{{ masters | zip(macs_master) | map('combine') | list }}"
+# - name: Update master dictionary with MAC addresses
+#   set_fact:
+#     masters: "{{ masters | zip(macs_master) | map('combine') | list }}"
 
 - name: Update worker dictionary with MAC addresses
   set_fact:
@@ -52,9 +52,9 @@
   set_fact:
     infras: "{{ infras | zip(macs_infra) | map('combine') | list }}"
 
-- name: Display updated master dictionary
-  debug:
-    var: masters
+# - name: Display updated master dictionary
+#   debug:
+#     var: masters
 
 - name: Display updated worker dictionary
   debug:
@@ -64,8 +64,8 @@
   debug:
     var: infras
 
-- name: Create agent-config.yaml from template to install-dir
+- name: Create node-config.yaml from template to install-dir
   template:
     src: "nodes-config.yaml.j2"
-    dest: "{{ cluster_data_dir }}/install-dir/node-joiner/agent-config.yaml"
+    dest: "{{ cluster_data_dir }}/install-dir/node-joiner/nodes-config.yaml"
     mode: '0664'

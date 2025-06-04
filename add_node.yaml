@@ -21,14 +21,30 @@
     ansible.builtin.import_role: 
       name: "gather-nodes-to-add"
 
-- hosts: cluster_to_deploy:!cluster_deployed
+  - name: display nodes to add
+    ansible.builtin.debug:
+      var: nodes_to_add
+    when: nodes_to_add is defined and nodes_to_add | length > 0
+
+
+- hosts: cluster_to_add_node
+# - hosts: cluster_to_deploy:!cluster_deployed
   gather_facts: true
   connection: local
   vars:
+    masters: []
     infras: "{{ nodes_to_add.infra }}"
     workers: "{{ nodes_to_add.worker }}"
   roles:
   - precheck
+
+# - hosts: cluster_to_add_node
+#   gather_facts: true
+#   connection: local
+#   tasks:
+#   - name: Fail with a message
+#     fail:
+#       msg: "Critical error: stopping playbook."
 
 - hosts: cluster_to_add_node
   gather_facts: true

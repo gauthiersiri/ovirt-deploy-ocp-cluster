@@ -1,12 +1,19 @@
-- name: Generate ISO with node-joiner
+# - name: Generate ISO with node-joiner
+#   environment:
+#     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+#   command: "{{ cluster_data_dir }}/install-dir/node-joiner/node-joiner.sh {{ cluster_data_dir }}/install-dir/node-joiner/agent-config.yaml"
+#   args:
+#     chdir: "{{ cluster_data_dir }}/install-dir/node-joiner"
+
+- name: Generate ISO with "oc adm node-image"
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
-  command: "{{ cluster_data_dir }}/install-dir/node-joiner/node-joiner.sh {{ cluster_data_dir }}/install-dir/node-joiner/agent-config.yaml"
+  command: "{{ cluster_data_dir }}/bin/oc adm node-image create {{ cluster_data_dir }}/install-dir/node-joiner/nodes-config.yaml -o new-nodes.iso"
   args:
     chdir: "{{ cluster_data_dir }}/install-dir/node-joiner"
 
 - name: Upload ISO
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
-  command: "{{ cluster_data_dir }}/bin/virtctl -n {{ project_name }} image-upload pvc {{ iso_pvc_name }} --image-path={{ cluster_data_dir }}/install-dir/node-joiner/node.x86_64.iso --no-create --insecure" 
+  command: "{{ cluster_data_dir }}/bin/virtctl -n {{ project_name }} image-upload pvc {{ iso_pvc_name }} --image-path={{ cluster_data_dir }}/install-dir/node-joiner/new-nodes.iso --no-create --insecure" 
 

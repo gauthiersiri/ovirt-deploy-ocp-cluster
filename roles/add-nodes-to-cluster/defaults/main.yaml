@@ -3,3 +3,4 @@ infras: []
 workers: []
 
 iso_pvc_name: "agent-iso-{{ config.cluster_name }}-addnode-pvc"
+root_device: "{{ config.root_device | default('/dev/vda') }}"
