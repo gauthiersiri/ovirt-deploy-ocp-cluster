@@ -9,15 +9,22 @@
   set_fact:
     nodes_count: "{{ nodes | dict2items | map(attribute='value') | map('length') | sum }}"
 
-- name: Wait for all nodes to be ready
+- name: Approve csrs for new  until we have a total of {{ nodes_count }} nodes
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
   shell: |
-    oc get nodes | grep -w Ready | wc -l | awk '{print $NF}'
+    oc get csr -o name | xargs oc adm certificate approve > /dev/null 2>&1
+    oc get nodes | grep -w Ready | wc -l
   register: result
-  until: result.stdout == nodes_count
-  retries: 180
+  until: (result.stdout | int) == (nodes_count | int)
+  retries: 150
   delay: 10
+  vars:
+    ansible_callback_diy_runner_retry_msg: >-
+      {%- set result = ansible_callback_diy.result.output -%}
+      {%- set retries_left = result.retries - result.attempts -%}
+      Retrying:  {{ result.stdout }}/{{ nodes_count }} nodes READY. ({{ retries_left }} Retries left) condition: {{ (result.stdout | int) == (nodes_count | int) }}...
+
 
 - name: Setup Infra nodes
   when: nodes.infra is defined and nodes.infra | length > 0
