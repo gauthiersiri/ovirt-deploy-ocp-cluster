@@ -16,13 +16,13 @@
       {%- endfor -%}
       {{ updated_nodes  }}    
 
-- name: Fetch the content of the sha256sum.txt from the clients downloads page
+- name: Fetch the content of the sha256sum.txt from the openshift clients downloads page
   uri:
     url: "{{ download.clients_url }}/sha256sum.txt"
     return_content: yes
   register: clients_content
 
-- name: Fetch the content of the sha256sum.txt from the clients downloads page
+- name: Fetch the content of the sha256sum.txt from the kubevirt clients downloads page
   uri:
     url: "https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt"
     return_content: yes
@@ -30,7 +30,7 @@
   
 - name: Set fact for mac vs linux binaries to download
   set_fact:
-    family: "{{ 'mac' if ansible_os_family == 'Darwin' else 'linux' }}"
+    family: "{{ 'mac-arm64' if ansible_os_family == 'Darwin' and ansible_architecture == 'arm64' else 'mac' if ansible_os_family == 'Darwin' else 'linux' }}"
     virtctl_family: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
     #{ "armv6l": "armhf", "armv7l": "armhf", "aarch64": "arm64", "x86_64": "amd64", "i386": "i386" }
     #kubevirt_arch: '{{ {"x86_64": "a", "string2": "b"}[ansible_architecture] | default("") }}'
@@ -114,7 +114,7 @@
   with_items: ["bin", "install-dir", "downloads"]
   when: clean is defined
 
-- name: Must always clean install-dir
+- name: Clean install-dir
   file:
     path: "{{ cluster_data_dir }}/{{ item }}"
     state: absent
