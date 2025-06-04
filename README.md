@@ -25,10 +25,12 @@ pip install -r requirements.yaml
   - community.crypto 
   - community.general
   - ansible.posix
-
 ```bash
 ansible-galaxy install -r requirements.yaml
 ```
+
+- nmstatectl
+  - for macos: `brew install nmstatectl`
 
 ## Deploy a new cluster
 
