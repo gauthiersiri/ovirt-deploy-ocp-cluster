@@ -43,8 +43,9 @@
 
 - name: Gather flattened list of all nodes
   ansible.builtin.include_tasks: check-vm.yaml
-  loop: "{{ flattened_nodes }}"
-
+  #loop: "{{ flattened_nodes }}"
+  loop: "{{ masters + infras + workers }}"
+  
 - name: "Error(s) found!"
   ansible.builtin.fail:
     msg: "{{ error_count }} error(s) found! \n{{ error_msgs | join('\n') | indent(4) }}"
