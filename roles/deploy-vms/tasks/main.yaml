@@ -6,11 +6,11 @@
     state: present
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
 
-- name: Create a NetworkAttachmentDefinition
-  kubernetes.core.k8s:
-    state: present
-    template: network-attachment-definition.j2
-    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+# - name: Create a NetworkAttachmentDefinition
+#   kubernetes.core.k8s:
+#     state: present
+#     template: network-attachment-definition.j2
+#     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
 
 - name: Delete PVC if already exist
   kubernetes.core.k8s:
