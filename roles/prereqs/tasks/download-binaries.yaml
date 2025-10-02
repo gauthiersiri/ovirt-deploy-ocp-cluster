@@ -1,0 +1,59 @@
+---
+- name: Fetch OpenShift clients SHA256 checksums
+  uri:
+    url: "{{ download.clients_url }}/sha256sum.txt"
+    return_content: yes
+    timeout: 30
+  register: clients_content
+  retries: 3
+  delay: 5
+
+- name: Fetch KubeVirt version information
+  uri:
+    url: "https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt"
+    return_content: yes
+    timeout: 30
+  register: virtctl_content
+  retries: 3
+  delay: 5
+
+- name: Determine platform-specific binary names
+  set_fact:
+    platform_info:
+      family: "{{ 'mac-arm64' if (ansible_os_family == 'Darwin' and ansible_architecture == 'arm64') else 'mac' if ansible_os_family == 'Darwin' else 'linux' }}"
+      virtctl_family: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
+      virtctl_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
+
+- name: Set download URLs
+  set_fact:
+    download_urls:
+      openshift_client: "{{ download.clients_url }}/{{ clients_content.content | regex_search('openshift-client-' + platform_info.family + '-.*.tar.gz') }}"
+      openshift_install: "{{ download.clients_url }}/{{ clients_content.content | regex_search('openshift-install-' + platform_info.family + '-.*.tar.gz') }}"
+      virtctl_client: "https://github.com/kubevirt/kubevirt/releases/download/{{ virtctl_content.content | trim }}/virtctl-{{ virtctl_content.content | trim }}-{{ platform_info.virtctl_family }}-{{ platform_info.virtctl_arch }}"
+
+- name: Download OpenShift binaries
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode | default('0644') }}"
+    force: true
+    validate_certs: no
+    timeout: 300
+  loop:
+    - { url: "{{ download_urls.openshift_client }}", dest: "{{ cluster_data_dir }}/downloads/oc_client.tar.gz" }
+    - { url: "{{ download_urls.openshift_install }}", dest: "{{ cluster_data_dir }}/downloads/openshift_install.tar.gz" }
+    - { url: "{{ download_urls.virtctl_client }}", dest: "{{ cluster_data_dir }}/bin/virtctl", mode: "0755" }
+  register: binary_downloads
+  retries: 3
+  delay: 10
+
+- name: Extract OpenShift binaries
+  unarchive:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0755'
+    exclude: ["README.md"]
+  loop:
+    - { src: "{{ cluster_data_dir }}/downloads/oc_client.tar.gz", dest: "{{ cluster_data_dir }}/bin" }
+    - { src: "{{ cluster_data_dir }}/downloads/openshift_install.tar.gz", dest: "{{ cluster_data_dir }}/bin" }
+  when: binary_downloads is changed

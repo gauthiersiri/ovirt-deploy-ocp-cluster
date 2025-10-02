@@ -1,0 +1,27 @@
+---
+- name: Clean up existing directories when clean is enabled
+  file:
+    path: "{{ cluster_data_dir }}/{{ item }}"
+    state: absent
+  loop: "{{ cluster_directories}}"
+  when: clean | bool
+
+- name: Clean install-dir when not keeping cluster install directory
+  file:
+    path: "{{ cluster_data_dir }}/install-dir"
+    state: absent
+  when: 
+    - not (clean | bool)
+    - not (keep_cluster_install_dir | bool)
+
+- name: Create required cluster directories
+  file:
+    path: "{{ cluster_data_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ cluster_directories }}"
+
+- name: Display cluster data directory location
+  debug:
+    msg: "Cluster data directory: {{ cluster_data_dir }}"
+    verbosity: 1

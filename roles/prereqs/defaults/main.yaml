@@ -1,1 +1,42 @@
+---
+# Default configuration values
 keep_cluster_install_dir: false
+clean: false
+install_python_modules: false
+
+# Default download configuration
+download:
+  clients_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable"
+
+# Required packages by OS family (including htpasswd utility)
+required_packages:
+  RedHat:
+    - patch
+    - gzip
+    - jq
+    - python3-pip
+    - httpd-tools  # htpasswd utility
+  Debian:
+    - patch
+    - gzip
+    - jq
+    - python3-pip
+    - apache2-utils  # htpasswd utility
+  Darwin:
+    - jq
+    - gnu-tar
+    - httpd  # htpasswd utility
+
+# Python modules (optional)
+python_modules:
+  - pyvmomi
+  - requests
+  - jmespath
+
+# Directory structure
+cluster_directories:
+  - bin
+  - downloads
+  - downloads/ISOs
+  - install-dir
+  - users

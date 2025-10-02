@@ -1,0 +1,195 @@
+- name: Define cluster data dir to {{ playbook_dir }}/clusters_data/{{ config.cluster_name }}
+  set_fact:
+    cluster_data_dir: "{{ playbook_dir }}/clusters_data/{{ config.cluster_name }}"
+    
+
+- name: Add 'name' property to each openshift nodes
+  set_fact:
+    nodes: >-
+      {%- set updated_nodes = {} -%}
+      {%- for key, value in nodes.items() -%}
+        {%- set updated_list = [] -%}
+        {%- for item in value -%}
+          {%- set _ = updated_list.append(item | combine({'name': key ~ loop.index })) -%}
+        {%- endfor -%}
+        {%- set _ = updated_nodes.update({key: updated_list}) -%}
+      {%- endfor -%}
+      {{ updated_nodes  }}    
+
+- name: Fetch the content of the sha256sum.txt from the openshift clients downloads page
+  uri:
+    url: "{{ download.clients_url }}/sha256sum.txt"
+    return_content: yes
+  register: clients_content
+
+- name: Fetch the content of the sha256sum.txt from the kubevirt clients downloads page
+  uri:
+    url: "https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt"
+    return_content: yes
+  register: virtctl_content
+  
+- name: Set fact for mac vs linux binaries to download
+  set_fact:
+    family: "{{ 'mac-arm64' if ansible_os_family == 'Darwin' and ansible_architecture == 'arm64' else 'mac' if ansible_os_family == 'Darwin' else 'linux' }}"
+    virtctl_family: "{{ 'darwin' if ansible_os_family == 'Darwin' else 'linux' }}"
+    #{ "armv6l": "armhf", "armv7l": "armhf", "aarch64": "arm64", "x86_64": "amd64", "i386": "i386" }
+    #kubevirt_arch: '{{ {"x86_64": "a", "string2": "b"}[ansible_architecture] | default("") }}'
+    virtctl_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
+
+- name:  Set the download facts for localhost, which will be used later
+  set_fact:
+    download: "{{ download | combine({ item.key : item.value }, recursive=True) }}"
+#  when: inventory_hostname == "localhost"
+  loop:
+    - { key: "openshiftClient", value: "{{ download.clients_url }}/{{ clients_content.content | regex_search('openshift-client-' + family + '-.*.tar.gz') }}" }
+    - { key: "openshiftInstall", value: "{{ download.clients_url }}/{{ clients_content.content | regex_search('openshift-install-' + family + '-.*.tar.gz') }}" }
+    - { key: "virtctlClient", value: "https://github.com/kubevirt/kubevirt/releases/download/{{ virtctl_content.content | trim }}/virtctl-{{ virtctl_content.content | trim }}-{{ virtctl_family }}-{{ virtctl_arch }}" }
+     #- { key: "virtctlClient", value: "https://github.com/kubevirt/kubevirt/releases/download/{{ virtctl_content.content | trim }}/virtctl-{{ virtctl_content.content | trim }}-linux-amd64" }
+
+- name: Make sure networkType is valid when defined
+  assert:
+    that:
+      - config.networkType in [ 'OpenShiftSDN', 'OVNKubernetes' ]
+    fail_msg:
+      - config.networkType = {{ config.networkType }}
+      - config.networkType must be OpenShiftSDN or OVNKubernetes
+    success_msg: config.network is valid
+  when: config.networkType is defined
+
+- name: Create ~/.ssh directory if it does not exist
+  file:
+    path: ~/.ssh
+    state: directory
+    mode: '0755'
+
+- name: Generate a SSH key-pair
+  openssh_keypair:
+    path: "~/.ssh/{{ config.cluster_name }}_id_rsa"
+    force: false
+
+- name: Set installer ssh key variable
+  set_fact:
+    installer_ssh_key: "{{ lookup('file', '~/.ssh/{{ config.cluster_name }}_id_rsa.pub') }}"
+
+- name: Install the necessary linux packages which will be needed later in the ansible run
+  when: ansible_os_family != 'Darwin'
+  package:
+    name:
+      - patch
+      - gzip
+      - jq
+  become: true
+
+- name: Display Ansible's Python version
+  debug:
+    var: ansible_python_version
+    verbosity: 1
+
+- name: Install python-pip or python2-pip if Ansible uses Python 2
+  package:
+    name:
+      - "python2-pip"
+  when: ansible_python_version is match("2.*") and ansible_os_family != 'Darwin'
+  become: true
+
+- name: Install python3-pip if Ansible uses Python 3
+  package:
+    name:
+      - python3-pip
+  when: ansible_python_version is match("3.*") and ansible_os_family != 'Darwin'
+  become: true
+
+# - name: Install Python Modules
+#   pip:
+#     name: "{{ item }}"
+#     extra_args: --user
+#   loop:
+#     - pyvmomi
+#     - requests
+
+- name: Clean up existing bin, install-dir and downloads folders
+  file:
+    path: "{{ cluster_data_dir }}/{{ item }}"
+    state: absent
+  with_items: ["bin", "install-dir", "downloads", "users"]
+  when: clean is defined
+
+- name: Clean install-dir
+  file:
+    path: "{{ cluster_data_dir }}/{{ item }}"
+    state: absent
+  with_items: ["install-dir"]
+  when: clean is not defined and keep_cluster_install_dir is false
+
+- name: Create bin, install-dir and downloads folders
+  file:
+    path: "{{ cluster_data_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  with_items: ["bin", "downloads","downloads/ISOs", "install-dir", "users"]
+  when: clean is not defined or keep_cluster_install_dir is true
+
+- name: Download the oc client binary
+  get_url:
+    url: "{{ download.openshiftClient }}"
+    dest: "{{ cluster_data_dir }}/downloads/oc_client.tar.gz"
+    force: true
+    validate_certs: no
+  register: oc_client_download
+
+- name: Download the openshift-install binary
+  get_url:
+    url: "{{ download.openshiftInstall }}"
+    dest: "{{ cluster_data_dir }}/downloads/openshift_install.tar.gz"
+    force: true
+    validate_certs: no
+  register: openshift_install_download
+
+- name: Download the virtctl binary
+  get_url:
+    url: "{{ download.virtctlClient }}"
+    dest: "{{ cluster_data_dir }}/bin/virtctl"
+    mode: '0775'
+    force: true
+    validate_certs: no
+  register: virtctl_download
+
+- name: Unarchive oc client
+  unarchive:
+    src: "{{ cluster_data_dir }}/downloads/oc_client.tar.gz"
+    dest: "{{ cluster_data_dir }}/bin"
+    mode: '0775'
+    exclude:
+      - README.md
+  when: oc_client_download is changed
+
+- name: Unarchive openshift-install
+  unarchive:
+    src: "{{ cluster_data_dir }}/downloads/openshift_install.tar.gz"
+    dest: "{{ cluster_data_dir }}/bin"
+    mode: '0775'
+    exclude:
+      - README.md
+  when: openshift_install_download is changed
+
+- name: Connect to Openshift Virtualization cluster {{ ovirt.hostname }} using token
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  ansible.builtin.command: "{{ cluster_data_dir }}/bin/oc login --token {{ ovirt.token }} --server {{ ovirt.hostname }} --insecure-skip-tls-verify=true"
+  register: result
+  when: ovirt.token is defined
+
+- name: Connect to Openshift Virtualization cluster {{ ovirt.hostname }} using user/password
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  ansible.builtin.command: "{{ cluster_data_dir }}/bin/oc login -u {{ ovirt.username }} -p {{ ovirt.password }} --server {{ ovirt.hostname }} --insecure-skip-tls-verify=true"
+  register: result
+  when: ovirt.username is defined and ovirt.password is defined
+
+- name: Test connectivity to Openshift Virtualization cluster {{ ovirt.hostname }}
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  ansible.builtin.command: "{{ cluster_data_dir }}/bin/oc get nodes"
+  register: result
+  # retries: 100
+  # delay: 10    

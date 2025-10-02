@@ -1,0 +1,48 @@
+---
+- name: Validate oVirt connection parameters
+  assert:
+    that:
+      - ovirt.hostname is defined
+      - ovirt.hostname | length > 0
+    fail_msg: "oVirt hostname must be defined"
+
+- name: Connect to oVirt cluster using token
+  block:
+    - name: Login with token
+      command:
+        cmd: "{{ cluster_data_dir }}/bin/oc login --token {{ ovirt.token }} --server {{ ovirt.hostname }} --insecure-skip-tls-verify=true"
+      environment:
+        KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+      no_log: true
+      register: token_login_result
+      changed_when: true
+  when: ovirt.token is defined
+
+- name: Connect to oVirt cluster using username/password
+  block:
+    - name: Login with credentials
+      command:
+        cmd: "{{ cluster_data_dir }}/bin/oc login -u {{ ovirt.username }} -p {{ ovirt.password }} --server {{ ovirt.hostname }} --insecure-skip-tls-verify=true"
+      environment:
+        KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+      no_log: true
+      register: creds_login_result
+      changed_when: true
+  when: 
+    - ovirt.token is not defined
+    - ovirt.username is defined
+    - ovirt.password is defined
+
+- name: Verify oVirt cluster connectivity
+  command:
+    cmd: "{{ cluster_data_dir }}/bin/oc get nodes --no-headers"
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  register: ovirt_connectivity_test
+  retries: 3
+  delay: 5
+  changed_when: false
+
+- name: Display oVirt cluster status
+  debug:
+    msg: "Successfully connected to oVirt cluster {{ ovirt.hostname }} - {{ ovirt_connectivity_test.stdout_lines | length }} nodes found"

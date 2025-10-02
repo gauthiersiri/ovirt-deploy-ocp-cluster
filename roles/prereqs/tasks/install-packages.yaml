@@ -1,0 +1,36 @@
+---
+- name: Display Ansible's Python version
+  debug:
+    var: ansible_python_version
+    verbosity: 1
+
+- name: Install required packages (Linux)
+  package:
+    name: "{{ required_packages[ansible_os_family] }}"
+    state: present
+  when: 
+    - required_packages[ansible_os_family] is defined
+    - ansible_os_family != 'Darwin'
+  become: true
+
+- name: Install required packages (macOS via Homebrew)
+  homebrew:
+    name: "{{ required_packages.Darwin }}"
+    state: present
+  when: ansible_os_family == 'Darwin'
+  delegate_to: localhost
+
+- name: Install Python modules (optional)
+  pip:
+    name: "{{ python_modules }}"
+    extra_args: --user
+  when: install_python_modules | default(false) | bool
+  ignore_errors: yes
+
+- name: Display installed package status
+  debug:
+    msg: |
+      Required packages installed for {{ ansible_os_family }} system:
+      - Packages: {{ required_packages[ansible_os_family] | default([]) | join(', ') }}
+      - Python modules: {{ 'Yes' if install_python_modules else 'No' }}
+    verbosity: 1

@@ -1,0 +1,44 @@
+---
+- name: Define cluster data directory
+  set_fact:
+    cluster_data_dir: "{{ playbook_dir }}/clusters_data/{{ config.cluster_name }}"
+
+- name: Validate required configuration
+  assert:
+    that:
+      - config is defined
+      - config.cluster_name is defined
+      - config.cluster_name | length > 0
+    fail_msg: "config.cluster_name must be defined and not empty"
+    success_msg: "Basic configuration validated"
+
+- name: Validate network type when defined
+  assert:
+    that:
+      - config.networkType in ['OpenShiftSDN', 'OVNKubernetes']
+    fail_msg: "config.networkType must be OpenShiftSDN or OVNKubernetes, got: {{ config.networkType }}"
+    success_msg: "Network type is valid: {{ config.networkType }}"
+  when: config.networkType is defined
+
+- name: Validate oVirt configuration
+  assert:
+    that:
+      - ovirt.hostname is defined
+      - (ovirt.token is defined) or (ovirt.username is defined and ovirt.password is defined)
+    fail_msg: "oVirt requires hostname and either token or username/password"
+    success_msg: "oVirt configuration validated"
+  when: ovirt is defined
+
+- name: Process OpenShift nodes configuration
+  set_fact:
+    nodes: >-
+      {%- set updated_nodes = {} -%}
+      {%- for key, value in nodes.items() -%}
+        {%- set updated_list = [] -%}
+        {%- for item in value -%}
+          {%- set _ = updated_list.append(item | combine({'name': key ~ loop.index })) -%}
+        {%- endfor -%}
+        {%- set _ = updated_nodes.update({key: updated_list}) -%}
+      {%- endfor -%}
+      {{ updated_nodes }}
+  when: nodes is defined
