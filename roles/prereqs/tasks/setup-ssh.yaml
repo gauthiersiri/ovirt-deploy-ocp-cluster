@@ -1,0 +1,35 @@
+---
+- name: Create ~/.ssh directory if it does not exist
+  file:
+    path: ~/.ssh
+    state: directory
+    mode: '0700'
+
+- name: Check if SSH key already exists
+  stat:
+    path: "~/.ssh/{{ config.cluster_name }}_id_rsa"
+  register: ssh_key_stat
+
+- name: Generate SSH key-pair for cluster
+  openssh_keypair:
+    path: "~/.ssh/{{ config.cluster_name }}_id_rsa"
+    type: rsa
+    size: 4096
+    force: false
+    comment: "{{ config.cluster_name }} cluster key"
+  register: ssh_key_generation
+
+- name: Set installer SSH key variable
+  set_fact:
+    installer_ssh_key: "{{ lookup('file', '~/.ssh/{{ config.cluster_name }}_id_rsa.pub') }}"
+
+- name: Display SSH key status
+  debug:
+    msg: |
+      SSH key for cluster {{ config.cluster_name }}:
+      {% if ssh_key_stat.stat.exists %}
+      - Using existing key: ~/.ssh/{{ config.cluster_name }}_id_rsa
+      {% else %}
+      - Generated new key: ~/.ssh/{{ config.cluster_name }}_id_rsa
+      {% endif %}
+    verbosity: 1

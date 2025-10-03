@@ -25,7 +25,7 @@ config:
   hybrid: false
   root_device: "/dev/vda"
   extra_manifests:
-  - mc-99-ibm-2145-non-rotational
+  - mc-99-ibm-2145-non-rotational.yaml
 
 nodes:
   master:
