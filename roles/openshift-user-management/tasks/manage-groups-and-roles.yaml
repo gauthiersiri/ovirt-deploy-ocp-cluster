@@ -1,0 +1,79 @@
+---
+- name: Get admin users list
+  set_fact:
+    admin_users: "{{ normalized_users | selectattr('admin', 'equalto', true) | map(attribute='name') | list }}"
+
+- name: Get regular users list
+  set_fact:
+    regular_users: "{{ normalized_users | selectattr('admin', 'equalto', false) | map(attribute='name') | list }}"
+
+# Groups Management
+- name: Manage admin group
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+  kubernetes.core.k8s:
+    state: "{{ 'absent' if admin_users | length == 0 else 'present' }}"
+    definition:
+      apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: "{{ admin_group_name }}"
+      users: "{{ admin_users }}"
+
+- name: Manage regular users group
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+  kubernetes.core.k8s:
+    state: "{{ 'absent' if regular_users | length == 0 else 'present' }}"
+    definition:
+      apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: "{{ user_group_name }}"
+      users: "{{ regular_users }}"
+
+# Role Bindings Management
+- name: Manage cluster-admin role binding for admin group
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+  kubernetes.core.k8s:
+    state: "{{ 'absent' if admin_users | length == 0 else 'present' }}"
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: "{{ admin_group_name }}-cluster-admin"
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-admin
+      subjects:
+        - apiGroup: rbac.authorization.k8s.io
+          kind: Group
+          name: "{{ admin_group_name }}"
+
+- name: Manage basic-user role binding for regular users group
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+  kubernetes.core.k8s:
+    state: "{{ 'absent' if regular_users | length == 0 else 'present' }}"
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: "{{ user_group_name }}-basic-user"
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: basic-user
+      subjects:
+        - apiGroup: rbac.authorization.k8s.io
+          kind: Group
+          name: "{{ user_group_name }}"
+
+- name: Display user assignments
+  debug:
+    msg:
+      - "Admin users ({{ admin_group_name }} group): {{ admin_users | join(', ') or 'None' }}"
+      - "Regular users ({{ user_group_name }} group): {{ regular_users | join(', ') or 'None' }}"
+  when: normalized_users is defined

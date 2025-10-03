@@ -1,0 +1,35 @@
+---
+- name: Check if openshift_users is defined and not empty
+  set_fact:
+    skip_user_creation: "{{ openshift_users is not defined or openshift_users | length == 0 }}"
+
+- name: Skip user creation message
+  debug:
+    msg: "Skipping user creation - openshift_users variable is not defined or empty"
+  when: skip_user_creation | bool
+
+- name: "Normalize user data (set default admin: false if it doesn't exist)"
+  set_fact:
+    normalized_users: "{{ normalized_users | default([]) + [item | combine({'admin': item.admin | default(false)})] }}"
+  loop: "{{ openshift_users }}"
+  when: 
+    - not (skip_user_creation | bool)
+    - openshift_users is defined
+
+- name: Create htpasswd file
+  include_tasks: create-htpasswd.yaml
+  when: not (skip_user_creation | bool)
+
+- name: Configure OAuth identity provider
+  include_tasks: configure-oauth.yaml
+  when: not (skip_user_creation | bool)
+
+- name: Manage groups and roles
+  include_tasks: manage-groups-and-roles.yaml
+  when: not (skip_user_creation | bool)
+
+- name: Clean up temporary files
+  file:
+    path: "{{ htpasswd_file }}"
+    state: absent
+  when: not (skip_user_creation | bool)

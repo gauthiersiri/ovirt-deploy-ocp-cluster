@@ -1,0 +1,11 @@
+# Default htpasswd file location
+htpasswd_file: "{{ cluster_data_dir }}/users.htpasswd"
+htpasswd_secret_name: "htpass-user-secret"
+oauth_provider_name: "htpasswd_provider"
+
+# User groups
+admin_group_name: "admins"
+user_group_name: "users"
+
+# Required variable (should be defined in playbook)
+openshift_users: []

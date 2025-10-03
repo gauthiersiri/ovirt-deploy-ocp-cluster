@@ -1,0 +1,97 @@
+- name: Setup prerequisites 
+  hosts: cluster_to_add_users
+  gather_facts: true
+  connection: local
+  vars:
+    keep_cluster_install_dir: true
+  roles:
+  - prereqs
+
+- name: Ensure OpenShift cluster connectivity
+  hosts: cluster_to_add_users
+  gather_facts: true
+  connection: local
+  vars:
+    kubeconfig_path: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+    cluster_api_url: "https://api.{{ config.cluster_name }}.{{ config.base_domain }}:6443"
+  tasks:
+    - name: Check if kubeconfig exists
+      ansible.builtin.stat:
+        path: "{{ kubeconfig_path }}"
+      register: kubeconfig_status
+
+    - name: Handle missing kubeconfig
+      block:
+        - name: Validate token availability
+          ansible.builtin.assert:
+            that:
+              - config.token is defined
+              - config.token | length > 0
+            fail_msg: "Cluster kubeconfig doesn't exist and config.token is not set. Cannot connect to {{ config.cluster_name }}.{{ config.base_domain }}"
+
+        - name: Create kubeconfig directory
+          ansible.builtin.file:
+            path: "{{ kubeconfig_path | dirname }}"
+            state: directory
+            mode: '0755'
+
+        - name: Login to OpenShift cluster
+          ansible.builtin.command:
+            cmd: "{{ cluster_data_dir }}/bin/oc login --token={{ config.token }} --server {{ cluster_api_url }} --insecure-skip-tls-verify=true"
+          environment:
+            KUBECONFIG: "{{ kubeconfig_path }}"
+          register: login_result
+          changed_when: true
+          no_log: true  # Hide token from logs
+
+        - name: Verify cluster connectivity
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: Namespace
+            name: default
+          environment:
+            KUBECONFIG: "{{ kubeconfig_path }}"
+          register: connectivity_check
+          failed_when: connectivity_check.resources | length == 0
+
+      when: not kubeconfig_status.stat.exists
+
+
+- name: Configure OpenShift users
+  hosts: cluster_to_add_users
+  gather_facts: true
+  connection: local
+  vars:
+    cluster_api_url: "https://api.{{ config.cluster_name }}.{{ config.base_domain }}:6443"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path | default(cluster_data_dir + '/install-dir/auth/kubeconfig') }}"
+  
+  pre_tasks:
+    - name: Display user management status
+      ansible.builtin.debug:
+        msg: |
+          Configuring users for cluster: {{ config.cluster_name }}.{{ config.base_domain }}
+          Users to configure: {{ openshift_users | default([]) | length }}
+      when: openshift_users is defined
+
+  roles:
+    - openshift-user-management
+
+  post_tasks:
+    - name: Verify user creation success
+      kubernetes.core.k8s_info:
+        api_version: user.openshift.io/v1
+        kind: Group
+        name: "{{ item }}"
+      loop:
+        - admins
+        - users
+      register: group_check
+      when: openshift_users is defined and openshift_users | length > 0
+
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          OpenShift user management completed successfully!
+          Admin users can login with: oc login -u <username> -p <password> --server {{ cluster_api_url }}
+  

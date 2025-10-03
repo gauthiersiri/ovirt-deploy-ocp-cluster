@@ -1,0 +1,53 @@
+---
+- name: Get current OAuth configuration
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+  kubernetes.core.k8s_info:
+    api_version: config.openshift.io/v1
+    kind: OAuth
+    name: cluster
+  register: current_oauth
+
+- name: Check if identity provider already exists
+  set_fact:
+    provider_exists: >-
+      {{ current_oauth.resources[0].spec.identityProviders | default([]) |
+         selectattr('name', 'equalto', oauth_provider_name) | list | length > 0 }}
+
+- name: Configure htpasswd identity provider
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: config.openshift.io/v1
+      kind: OAuth
+      metadata:
+        name: cluster
+      spec:
+        identityProviders: "{{ (current_oauth.resources[0].spec.identityProviders | default([])) + [htpasswd_provider] }}"
+  vars:
+    htpasswd_provider:
+      name: "{{ oauth_provider_name }}"
+      challenge: true
+      login: true
+      mappingMethod: claim
+      type: HTPasswd
+      htpasswd:
+        fileData:
+          name: "{{ htpasswd_secret_name }}"
+  when: not provider_exists
+
+- name: Wait for authentication pods to restart
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: openshift-authentication
+    label_selectors:
+      - app=oauth-openshift
+  register: auth_pods
+  until: auth_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length > 0
+  retries: 30
+  delay: 10
