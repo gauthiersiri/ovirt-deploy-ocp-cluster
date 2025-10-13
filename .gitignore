@@ -3,6 +3,8 @@ group_vars/*
 host_vars/*
 !host_vars/host.sample
 inventory/hosts.*
+inventory/hosts
+!inventory/hosts.sample
 .vscode
 group_vars/_old/all.*
 logs_deployed/*
