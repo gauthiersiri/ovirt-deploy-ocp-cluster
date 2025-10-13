@@ -1,0 +1,11 @@
+[cluster_deployed]
+gauthocp.mop.ibm
+
+[cluster_to_deploy]
+gauthocp.mop.ibm
+
+[cluster_to_add_node]
+
+[cluster_to_add_users]
+gauthocp.mop.ibm
+

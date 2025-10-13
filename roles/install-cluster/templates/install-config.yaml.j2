@@ -39,11 +39,14 @@ additionalTrustBundle: |
 {{ registry.cert_content | indent(width=2, first=true) }}
 {% endif %}
 {% if registry is defined and registry.disconnected is defined and registry.disconnected == true %}
-imageContentSources:
+imageDigestSources:
 - mirrors:
-  - {{ registry.host }}:{{ registry.port }}/{{ registry.repo }}
-  source: quay.io/{{ registry.product_repo }}/{{ registry.product_release_name }}
+  - {{ registry.url }}/quay.io/openshift-release-dev/ocp-release
+  source: quay.io/openshift-release-dev/ocp-release
 - mirrors:
-  - {{ registry.host }}:{{ registry.port }}/{{ registry.repo }}
-  source: quay.io/{{ registry.product_repo }}/ocp-v4.0-art-dev
+  - {{ registry.url }}/quay.io/openshift-release-dev/ocp-v4.0-art-dev
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+- mirrors:
+  - {{ registry.url }}/registry.redhat.io
+  source: registry.redhat.io
 {% endif %}

@@ -59,3 +59,10 @@ network_modifications:
   - cidr: 100.66.0.0/15
   machineNetwork:
   - cidr: 10.3.59.0/24
+
+# Uncomment for airgap deployment / Modify roles/install-cluster/templates/install-config.yaml.j2  imagedigestsources accordingly to fit sources
+# To enhance!!!!!!!!
+# registry:
+#   disconnected: true
+#   url: artifactory.domain:port
+#   cert_content: "{{ lookup('file', '~/path/to/registry/certificate.crt') }}"

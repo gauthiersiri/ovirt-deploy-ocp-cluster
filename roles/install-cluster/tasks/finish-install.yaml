@@ -75,3 +75,66 @@
 - name: Output results from openshift-install wait-for install-complete
   debug:
    msg: "{{ result_complete.stderr | regex_findall('level=info.*') | list }}"
+
+- name: Finalize Airgap Configuration
+  when: registry is defined and registry.disconnected is defined and registry.disconnected == true
+  environment:
+    KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+  block:
+    - name: Patch OperatorHub to disable all default sources
+      kubernetes.core.k8s:
+            api_version: config.openshift.io/v1
+            kind: OperatorHub
+            name: cluster
+            namespace: ""
+            definition:
+              spec:
+                disableAllDefaultSources: true
+            state: patched
+    
+    - name: Get OpenShift cluster version
+      kubernetes.core.k8s_info:
+        api_version: config.openshift.io/v1
+        kind: ClusterVersion
+      register: cluster_version_info
+
+    - name: Extract major.minor version
+      set_fact:
+        ocp_major_version: "{{ cluster_version_info.resources[0].status.desired.version.split('.')[:2] | join('.') }}"
+
+    - name: Display Openshift version
+      debug:
+        msg: "OpenShift major version is {{ ocp_major_version }}"
+    
+    - name: Create CatalogSources "{{ item }}"
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: operators.coreos.com/v1alpha1
+          kind: CatalogSource
+          metadata:
+            name: "{{ item }}"
+            namespace: openshift-marketplace
+          spec:
+            image: "{{ registry.url }}/registry.redhat.io/redhat/{{ item }}-index:v{{ ocp_major_version }}"
+            sourceType: grpc
+      loop:
+        - certified-operator
+        - redhat-operator
+        
+    - name: Wait for CatalogSources to be Ready
+      kubernetes.core.k8s_info:
+        api_version: operators.coreos.com/v1alpha1
+        kind: CatalogSource
+        name: "{{ item }}"
+        namespace: openshift-marketplace 
+      register: cs
+      retries: 60
+      delay: 5
+      until: >
+        cs.resources
+        and cs.resources[0].status.connectionState.lastObservedState is defined
+        and cs.resources[0].status.connectionState.lastObservedState == "READY"
+      loop:
+        - certified-operator
+        - redhat-operator
