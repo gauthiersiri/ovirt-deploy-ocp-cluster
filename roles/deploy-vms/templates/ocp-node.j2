@@ -1,7 +1,7 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}
+  name: {{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }}
   namespace: {{ project_name }}
 spec:
   running: false
@@ -9,7 +9,7 @@ spec:
     - apiVersion: cdi.kubevirt.io/v1beta1
       kind: DataVolume
       metadata:
-        name: "{{ item.name }}-rootdisk"
+        name: "{{ item.name }}-{{ config.cluster_name }}-rootdisk"
       spec:
         source:
           blank: {}    
@@ -60,7 +60,7 @@ spec:
             efi:
               secureBoot: false
         machine:
-          type: pc-q35-rhel9.2.0
+          type: pc-q35-rhel9.4.0
         memory:
           guest: "{{ item.ram_gb }}Gi"
         resources: {}
@@ -71,7 +71,7 @@ spec:
       terminationGracePeriodSeconds: 180
       volumes:
         - dataVolume:
-            name: "{{ item.name }}-rootdisk"
+            name: "{{ item.name }}-{{ config.cluster_name }}-rootdisk"
           name: rootdisk
         - name: installation-cdrom
           persistentVolumeClaim:
@@ -79,5 +79,5 @@ spec:
 {% if item.odf_disk_size is defined %}
         - name: odf-osd-1
           persistentVolumeClaim:
-            claimName: {{ item.name }}-odf-osd-1
+            claimName: "{{ item.name }}-{{ config.cluster_name }}-odf-osd-1"
 {% endif %}

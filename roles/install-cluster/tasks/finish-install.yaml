@@ -61,9 +61,9 @@
             nodeSelector:
               matchLabels:
                 node-role.kubernetes.io/infra: ""
-          tolerations:
-          - effect: NoSchedule
-            operator: Exists
+            tolerations:
+            - effect: NoSchedule
+              operator: Exists
 
 - name: Wait for install complete
   command: "{{ cluster_data_dir }}/bin/openshift-install agent wait-for install-complete --dir={{ cluster_data_dir }}/install-dir --log-level debug" # noqa 301

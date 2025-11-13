@@ -35,7 +35,7 @@
 
 - name: Verify oVirt cluster connectivity
   command:
-    cmd: "{{ cluster_data_dir }}/bin/oc get nodes --no-headers"
+    cmd: "{{ cluster_data_dir }}/bin/oc projects"
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   register: ovirt_connectivity_test
@@ -45,4 +45,4 @@
 
 - name: Display oVirt cluster status
   debug:
-    msg: "Successfully connected to oVirt cluster {{ ovirt.hostname }} - {{ ovirt_connectivity_test.stdout_lines | length }} nodes found"
+    msg: "Successfully connected to oVirt cluster {{ ovirt.hostname }} - {{ ovirt_connectivity_test.stdout_lines | length }} projects found"

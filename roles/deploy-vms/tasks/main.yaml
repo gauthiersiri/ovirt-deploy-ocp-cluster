@@ -1,10 +1,10 @@
-- name: Create a k8s namespace
-  kubernetes.core.k8s:
-    name: "{{ project_name }}"
-    api_version: v1
-    kind: Namespace
-    state: present
-    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+# - name: Create a k8s namespace
+#   kubernetes.core.k8s:
+#     name: "{{ project_name }}"
+#     api_version: v1
+#     kind: Namespace
+#     state: present
+#     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
 
 # - name: Create a NetworkAttachmentDefinition
 #   kubernetes.core.k8s:
@@ -33,7 +33,7 @@
       apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
-        name: "{{ item.name }}-odf-osd-1"
+        name: "{{ item.name }}-{{ config.cluster_name }}-odf-osd-1"
         namespace: "{{ project_name }}"
       spec:
         accessModes:

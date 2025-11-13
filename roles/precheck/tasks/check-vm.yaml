@@ -12,12 +12,12 @@
         error_msgs: "{{ error_msgs + ['Error #' + error_count + ': IP ' + item.ip + ' ALREADY IN USE!' ] }}"
   when: result_ping.stdout == "0"
 
-- name: "Verify vm name {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} does not already exist in ns {{ project_name }}"
+- name: "Verify vm name {{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }} does not already exist in ns {{ project_name }}"
   kubernetes.core.k8s_info:
     namespace: "{{ project_name }}"
     kind: VirtualMachine
     api_version: kubevirt.io/v1
-    name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+    name: "{{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }}"
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   register: vm_exists
 
@@ -28,5 +28,5 @@
         error_count: "{{ error_count | int + 1 }}"
     - name: Add error message
       set_fact:
-        error_msgs: "{{ error_msgs + ['Error #' + error_count + ': ' + item.name + '.' + config.cluster_name + '.' +  config.base_domain + ' ALREADY EXISTS!' ] }}"
+        error_msgs: "{{ error_msgs + ['Error #' + error_count + ': ' + (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') + ' ALREADY EXISTS!' ] }}"
   when: vm_exists.resources | length > 0
