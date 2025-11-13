@@ -75,7 +75,7 @@
 #         echo "Labeled node $worker"
 #       done
 
-- name: "ocs/localstorage : Label nodes"
+- name: "ocs/localstorage : Label and taint infra nodes"
   kubernetes.core.k8s:
     state: patched
     merge_type: merge
@@ -86,6 +86,11 @@
         name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
         labels: 
           cluster.ocs.openshift.io/openshift-storage: ""
+      spec:
+        taints:
+          - key: node.ocs.openshift.io/storage
+            value: 'true'
+            effect: NoSchedule         
     # kubeconfig: "{{ kubeconfig }}"
   loop: "{{ odf_nodes }}"
 

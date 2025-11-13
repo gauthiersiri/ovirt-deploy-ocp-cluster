@@ -1,9 +1,14 @@
 [cluster_deployed]
-chaocp.mop.ibm
+project1.mop.ibm
+agl-mvi.mop.ibm
+olive.nca.ihost.com
+edf-mas.mop.ibm
+rio-wx.automation.nca.ihost.com
+willow.nca.ihost.com
+aiops.automation.nca.ihost.com
 
 [cluster_to_deploy]
-chaocp.mop.ibm
-gauthocp.mop.ibm
+aiops.automation.nca.ihost.com
 
 [cluster_to_add_node]
-gauthocp.mop.ibm
+

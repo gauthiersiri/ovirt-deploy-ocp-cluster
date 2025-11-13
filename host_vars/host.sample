@@ -29,16 +29,16 @@ config:
 
 nodes:
   master:
-    - { ip: 10.3.59.141, cpu: 8, ram_gb: 16, disk_size_gb: 120 }
-    - { ip: 10.3.59.142, cpu: 8, ram_gb: 16, disk_size_gb: 120 }
-    - { ip: 10.3.59.143, cpu: 8, ram_gb: 16, disk_size_gb: 120 }
+    - { ip: 10.3.59.141, cpu: 8, ram_gb: 24, disk_size_gb: 120 }
+    - { ip: 10.3.59.142, cpu: 8, ram_gb: 24, disk_size_gb: 120 }
+    - { ip: 10.3.59.143, cpu: 8, ram_gb: 24, disk_size_gb: 120 }
   worker:
     - { ip: 10.3.59.144, cpu: 8, ram_gb: 16, disk_size_gb: 300 }
     - { ip: 10.3.59.145, cpu: 8, ram_gb: 16, disk_size_gb: 300 }
   infra:
-    - { ip: 10.3.59.146, cpu: 16, ram_gb: 34, disk_size_gb: 300, odf_disk_size: 200 }
-    - { ip: 10.3.59.147, cpu: 16, ram_gb: 34, disk_size_gb: 300, odf_disk_size: 200 }
-    - { ip: 10.3.59.148, cpu: 16, ram_gb: 34, disk_size_gb: 300, odf_disk_size: 200 }
+    - { ip: 10.3.59.146, cpu: 16, ram_gb: 34, disk_size_gb: 120, odf_disk_size: 200 }
+    - { ip: 10.3.59.147, cpu: 16, ram_gb: 34, disk_size_gb: 120, odf_disk_size: 200 }
+    - { ip: 10.3.59.148, cpu: 16, ram_gb: 34, disk_size_gb: 120, odf_disk_size: 200 }
 
 download:
   clients_url: "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/{{ config.cluster_version }}"
