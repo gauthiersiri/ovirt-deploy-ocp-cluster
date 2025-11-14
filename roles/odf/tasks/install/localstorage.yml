@@ -75,7 +75,7 @@
 #         echo "Labeled node $worker"
 #       done
 
-- name: "ocs/localstorage : Label and taint infra nodes"
+- name: "ocs/localstorage : Label infra nodes"
   kubernetes.core.k8s:
     state: patched
     merge_type: merge
@@ -85,12 +85,7 @@
       metadata:
         name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
         labels: 
-          cluster.ocs.openshift.io/openshift-storage: ""
-      spec:
-        taints:
-          - key: node.ocs.openshift.io/storage
-            value: 'true'
-            effect: NoSchedule         
+          cluster.ocs.openshift.io/openshift-storage: ""    
     # kubeconfig: "{{ kubeconfig }}"
   loop: "{{ odf_nodes }}"
 
@@ -103,6 +98,22 @@
     apply: yes
     definition: "{{ lookup('template', 'templates/localstorage/localvolume.yaml') }}"
     # kubeconfig: "{{ kubeconfig }}"
+
+
+- name: "ocs/localstorage : Taint infra nodes"
+  kubernetes.core.k8s:
+    state: patched
+    merge_type: merge
+    definition:
+      apiVersion: v1
+      kind: Node
+      spec:
+        taints:
+          - key: node.ocs.openshift.io/storage
+            value: 'true'
+            effect: NoSchedule         
+    # kubeconfig: "{{ kubeconfig }}"
+  loop: "{{ odf_nodes }}"
 
 
 # 6. Provide debug information
