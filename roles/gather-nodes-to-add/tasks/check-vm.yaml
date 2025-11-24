@@ -1,7 +1,7 @@
-- name: check if vm  {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} exists on ovirt cluster
+- name: check if vm  {{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }} exists on ovirt cluster
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
-  command: "oc get vm -n {{ project_name }} {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+  command: "oc get vm -n {{ project_name }} {{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }}"
   register: vm_output
   ignore_errors: true
 

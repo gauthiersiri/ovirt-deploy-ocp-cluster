@@ -8,14 +8,14 @@
 - name: Get MAC addresses for worker VMs
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
-  command: "oc get vm -n {{ project_name }} {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
+  command: "oc get vm -n {{ project_name }} {{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
   register: worker_mac_addresses
   loop: "{{ workers }}"
 
 - name: Get MAC addresses for infra VMs
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
-  command: "oc get vm -n {{ project_name }} {{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
+  command: "oc get vm -n {{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }} -o jsonpath='{.spec.template.spec.domain.devices.interfaces[0].macAddress}'"
   register: infra_mac_addresses
   loop: "{{ infras }}"
 

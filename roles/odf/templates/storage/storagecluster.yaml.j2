@@ -6,6 +6,9 @@ metadata:
   namespace: openshift-storage
 spec:
   manageNodes: false
+  managedResources:
+    cephBlockPools:
+      defaultStorageClass: true
   monDataDirHostPath: /var/lib/rook
   storageDeviceSets:
   - count: 1

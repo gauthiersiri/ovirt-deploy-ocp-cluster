@@ -6,9 +6,11 @@ edf-mas.mop.ibm
 rio-wx.automation.nca.ihost.com
 willow.nca.ihost.com
 aiops.automation.nca.ihost.com
+test.mop.ibm
+test417.mop.ibm
 
 [cluster_to_deploy]
-aiops.automation.nca.ihost.com
+test417.mop.ibm
 
 [cluster_to_add_node]
 

@@ -25,7 +25,7 @@
     name: "{{ python_modules }}"
     extra_args: --user
   when: install_python_modules | default(false) | bool
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Display installed package status
   debug:

@@ -8,7 +8,7 @@
 
 - name: Start worker nodes
   kubevirt.core.kubevirt_vm:
-    name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+    name: "{{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }}"
     namespace: "{{ project_name }}"
     running: true
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
@@ -16,7 +16,7 @@
 
 - name: Start infra nodes
   kubevirt.core.kubevirt_vm:
-    name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+    name: "{{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }}"
     namespace: "{{ project_name }}"
     running: true
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"

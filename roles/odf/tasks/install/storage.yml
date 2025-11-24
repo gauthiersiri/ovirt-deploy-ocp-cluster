@@ -70,6 +70,25 @@
     - storagecluster_info.resources | length > 0
     - storagecluster_info.resources | json_query('[*].status.conditions[?type==`Available`][].status') | select ('match','True') | list | length == 1
 
+
+- name: "ocs/localstorage : Taint infra nodes"
+  kubernetes.core.k8s:
+    state: patched
+    merge_type: merge
+    definition:
+      apiVersion: v1
+      kind: Node
+      metadata:
+        name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
+      spec:
+        taints:
+          - key: node.ocs.openshift.io/storage
+            value: 'true'
+            effect: NoSchedule         
+    # kubeconfig: "{{ kubeconfig }}"
+  loop: "{{ odf_nodes }}"
+
+
 # 4. Provide debug information
 # -----------------------------------------------------------------------------
 - name: "ocs/storage : Debug information"

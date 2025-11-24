@@ -100,22 +100,6 @@
     # kubeconfig: "{{ kubeconfig }}"
 
 
-- name: "ocs/localstorage : Taint infra nodes"
-  kubernetes.core.k8s:
-    state: patched
-    merge_type: merge
-    definition:
-      apiVersion: v1
-      kind: Node
-      spec:
-        taints:
-          - key: node.ocs.openshift.io/storage
-            value: 'true'
-            effect: NoSchedule         
-    # kubeconfig: "{{ kubeconfig }}"
-  loop: "{{ odf_nodes }}"
-
-
 # 6. Provide debug information
 # -----------------------------------------------------------------------------
 - name: "ocs/localstorage : Debug for Local Storage"
