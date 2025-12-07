@@ -21,7 +21,24 @@ spec:
               storage: "{{ item.disk_size_gb }}Gi"
           storageClassName: {{ ovirt.storage_class }}
   template:
+    metadata:
+      annotations:
+        descheduler.alpha.kubernetes.io/evict: 'true'
+      labels:
+        antiaffinity: {{ config.cluster_name }}-{{ item.role }}
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: antiaffinity
+                  operator: In
+                  values:
+                  - {{ config.cluster_name }}-{{ item.role }}
+              topologyKey: kubernetes.io/hostname
+            weight: 100
       evictionStrategy: LiveMigrateIfPossible
       architecture: amd64
       domain:
