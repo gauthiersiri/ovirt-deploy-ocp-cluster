@@ -15,3 +15,5 @@ test*
 node_joiner
 clusters_data
 common_tasks
+.DS_Store
+*.lock
