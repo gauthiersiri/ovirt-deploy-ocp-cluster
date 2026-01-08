@@ -84,8 +84,8 @@
       kind: Node
       metadata:
         name: "{{ item.name }}.{{ config.cluster_name }}.{{ config.base_domain }}"
-        labels: 
-          cluster.ocs.openshift.io/openshift-storage: ""    
+        labels:
+          cluster.ocs.openshift.io/openshift-storage: ""
     # kubeconfig: "{{ kubeconfig }}"
   loop: "{{ odf_nodes }}"
 

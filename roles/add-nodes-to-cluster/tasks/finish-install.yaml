@@ -61,6 +61,29 @@
            namespace: openshift-ingress-operator
          spec:
           nodePlacement:
+            tolerations:
+            - key: node.ocs.openshift.io/storage
+              value: "true"
+              effect: NoSchedule
             nodeSelector:
               matchLabels:
                 node-role.kubernetes.io/infra: ""
+
+    - name: "Add toleration to dnses operator"
+      environment:
+       KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+      kubernetes.core.k8s:
+        state: patched
+        merge_type: merge
+        definition:
+          apiVersion: operator.openshift.io/v1
+          kind: DNS
+          metadata:
+            name: default
+            namespace: openshift-dns-operator
+          spec:
+            nodePlacement:
+              tolerations:
+              - key: node.ocs.openshift.io/storage
+                value: "true"
+                effect: NoSchedule
