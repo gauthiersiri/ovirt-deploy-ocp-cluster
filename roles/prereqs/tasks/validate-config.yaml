@@ -36,7 +36,7 @@
       {%- for key, value in nodes.items() -%}
         {%- set updated_list = [] -%}
         {%- for item in value -%}
-          {%- set _ = updated_list.append(item | combine({'name': key ~ loop.index })) -%}
+          {%- set _ = updated_list.append(item | combine({'name': key ~ loop.index, 'role': key })) -%}
         {%- endfor -%}
         {%- set _ = updated_nodes.update({key: updated_list}) -%}
       {%- endfor -%}
