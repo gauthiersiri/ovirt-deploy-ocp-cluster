@@ -62,8 +62,38 @@
               matchLabels:
                 node-role.kubernetes.io/infra: ""
             tolerations:
-            - effect: NoSchedule
+            # Allow ingress controller to run on infra nodes
+            - key: node-role.kubernetes.io/infra
               operator: Exists
+              effect: NoSchedule
+            # Tolerate storage-specific taints if present
+            - key: node.ocs.openshift.io/storage
+              value: "true"
+              effect: NoSchedule
+
+    - name: "Add toleration to dnses operator"
+      environment:
+       KUBECONFIG: "{{ cluster_data_dir }}/install-dir/auth/kubeconfig"
+      kubernetes.core.k8s:
+        state: patched
+        merge_type: merge
+        definition:
+          apiVersion: operator.openshift.io/v1
+          kind: DNS
+          metadata:
+            name: default
+            namespace: openshift-dns-operator
+          spec:
+            nodePlacement:
+              tolerations:
+              # Allow ingress controller to run on infra nodes
+              - key: node-role.kubernetes.io/infra
+                operator: Exists
+                effect: NoSchedule
+              # Tolerate storage-specific taints if present
+              - key: node.ocs.openshift.io/storage
+                value: "true"
+                effect: NoSchedule
 
 - name: Wait for install complete
   command: "{{ cluster_data_dir }}/bin/openshift-install agent wait-for install-complete --dir={{ cluster_data_dir }}/install-dir --log-level debug" # noqa 301
