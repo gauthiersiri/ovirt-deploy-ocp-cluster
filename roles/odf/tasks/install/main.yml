@@ -32,6 +32,9 @@
     namespace: openshift-marketplace  # Note: A namespace must be provided when calling packages.operators.coreos.com/v1
     # kubeconfig: "{{ kubeconfig }}"
   register: storage_operator_manifest
+  retries: 3
+  delay: 10
+  ignore_errors: yes
 
 - name: Assert that PackageManifest exists
   ansible.builtin.assert:
