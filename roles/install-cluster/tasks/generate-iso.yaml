@@ -1,5 +1,5 @@
 - name: Generate ISO
-  command: "{{ cluster_data_dir }}/bin/openshift-install --dir={{ cluster_data_dir }}/install-dir agent create image --log-level debug" 
+  command: "{{ cluster_data_dir }}/bin/openshift-install --dir={{ cluster_data_dir }}/install-dir agent create image --log-level info"
 
 - name: Upload ISO
   environment:
