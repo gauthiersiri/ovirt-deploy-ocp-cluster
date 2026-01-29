@@ -1,5 +1,8 @@
 ---
+# openshift project name
 project_name: "gauth"
+# openshift virt folder name (optional)
+virt_folder: "test-gauth"
 
 # ovrit cluster
 ovirt:
