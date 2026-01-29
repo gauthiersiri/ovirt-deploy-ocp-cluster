@@ -3,9 +3,9 @@ kind: VirtualMachine
 metadata:
   name: {{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }}
   namespace: {{ project_name }}
-{% if virt_folder is defined and virt_folder != '' %}
+{% if openshift_virt_folder is defined and openshift_virt_folder != '' %}
   labels:
-    vm.openshift.io/folder: "{{ virt_folder }}"
+    vm.openshift.io/folder: "{{ openshift_virt_folder }}"
 {% endif %}
 spec:
   running: false
