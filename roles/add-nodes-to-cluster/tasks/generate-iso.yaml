@@ -15,5 +15,4 @@
 - name: Upload ISO
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
-  command: "{{ cluster_data_dir }}/bin/virtctl -n {{ project_name }} image-upload pvc {{ iso_pvc_name }} --image-path={{ cluster_data_dir }}/install-dir/node-joiner/new-nodes.iso --no-create --insecure" 
-
+  command: "{{ cluster_data_dir }}/bin/virtctl -n {{ project_name }} image-upload pvc {{ iso_pvc_name }} --image-path={{ cluster_data_dir }}/install-dir/node-joiner/new-nodes.iso --no-create --insecure"
