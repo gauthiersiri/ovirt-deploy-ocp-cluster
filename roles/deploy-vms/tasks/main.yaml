@@ -74,3 +74,26 @@
     template: "ocp-node.j2"
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   loop: "{{ infras }}"
+  
+- name: Add VM ownership for ODF PVCs (infra only)
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: "{{ item.name }}-{{ config.cluster_name }}-odf-osd-1"
+        namespace: "{{ project_name }}"
+        ownerReferences:
+          - apiVersion: kubevirt.io/v1
+            kind: VirtualMachine
+            name: "{{ vm_name }}"
+            uid: "{{ vm_info.metadata.uid }}"
+            controller: true
+            blockOwnerDeletion: true
+    state: present
+    kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+  vars:
+    vm_name:  "{{ (item.name + '-' + config.cluster_name + '-' + config.base_domain) | replace('.', '-') }}"
+    vm_info: "{{ lookup('kubernetes.core.k8s', kind='VirtualMachine', resource_name=vm_name, namespace=project_name, kubeconfig=cluster_data_dir + '/install-dir/ovirt-kubeconfig') }}"
+  loop: "{{ workers + infras }}"
+  when: item.odf_disk_size is defined
