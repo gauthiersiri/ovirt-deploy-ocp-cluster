@@ -32,6 +32,10 @@
     namespace: openshift-marketplace  # Note: A namespace must be provided when calling packages.operators.coreos.com/v1
     # kubeconfig: "{{ kubeconfig }}"
   register: storage_operator_manifest
+  until: >
+    storage_operator_manifest is defined and
+    storage_operator_manifest.resources is defined and
+    storage_operator_manifest.resources | length == 1
   retries: 3
   delay: 10
   ignore_errors: yes
@@ -42,7 +46,7 @@
       - storage_operator_manifest is defined
       - storage_operator_manifest.resources is defined
       - storage_operator_manifest.resources | length == 1
-    fail_msg: "PackageManifest not found: {{ storage_operator }}-operator"
+    fail_msg: "PackageManifest not found: {{ storage_operator }}-operator after 3 retries"
 
 - name: Set the subscription information
   set_fact:

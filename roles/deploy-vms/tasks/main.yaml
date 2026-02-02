@@ -12,16 +12,22 @@
 #     template: network-attachment-definition.j2
 #     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
 
-- name: Delete PVC if already exist
+# - name: Delete PVC if already exist
+#   kubernetes.core.k8s:
+#     namespace: "{{ project_name }}"
+#     api_version: v1
+#     kind: pvc
+#     state: absent
+#     name: "{{ iso_pvc_name }}"
+#     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
+
+- name: Delete PVC for ISO if they already exist
   kubernetes.core.k8s:
-    namespace: "{{ project_name }}"
-    api_version: v1
-    kind: pvc
+    template: agent-iso-pvc.j2
     state: absent
-    name: "{{ iso_pvc_name }}"
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
 
-- name: Create a PVC for the ISO 
+- name: Create a PVC for the ISO
   kubernetes.core.k8s:
     template: agent-iso-pvc.j2
     state: present
@@ -51,20 +57,20 @@
 - name: Create master VMs
   kubernetes.core.k8s:
     state: present
-    template: 'ocp-node.j2'
+    template: "ocp-node.j2"
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   loop: "{{ masters }}"
 
 - name: Create worker VMs
   kubernetes.core.k8s:
     state: present
-    template: 'ocp-node.j2'
+    template: "ocp-node.j2"
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   loop: "{{ workers }}"
 
 - name: Create infra VMs
   kubernetes.core.k8s:
     state: present
-    template: 'ocp-node.j2'
+    template: "ocp-node.j2"
     kubeconfig: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
   loop: "{{ infras }}"

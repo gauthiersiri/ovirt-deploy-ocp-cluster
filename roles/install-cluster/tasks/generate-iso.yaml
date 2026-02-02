@@ -1,7 +1,7 @@
 - name: Generate ISO
-  command: "{{ cluster_data_dir }}/bin/openshift-install --dir={{ cluster_data_dir }}/install-dir agent create image --log-level debug" 
+  command: "{{ cluster_data_dir }}/bin/openshift-install --dir={{ cluster_data_dir }}/install-dir agent create image --log-level info"
 
 - name: Upload ISO
   environment:
     KUBECONFIG: "{{ cluster_data_dir }}/install-dir/ovirt-kubeconfig"
-  command: "{{ cluster_data_dir }}/bin/virtctl -n {{ project_name }} image-upload pvc {{ iso_pvc_name }} --image-path={{ cluster_data_dir }}/install-dir/agent.x86_64.iso --no-create --insecure" 
+  command: "{{ cluster_data_dir }}/bin/virtctl -n {{ project_name }} image-upload pvc {{ iso_pvc_name }} --image-path={{ cluster_data_dir }}/install-dir/agent.x86_64.iso --no-create --insecure"

@@ -37,6 +37,12 @@ ansible-galaxy install -r requirements.yaml
 ### Prepare a host vars file
 Using the template *host_vars/host.sample*, create a new host vars file *mycluster* for your cluster to deploy.
 
+**Key Configuration Parameters:**
+
+- `openshift_virt_folder` (optional): Specifies the folder name in OpenShift Virtualization where VMs will be organized. This helps group and manage cluster VMs separately from other virtual machines. If not specified, VMs will be created in the default location.
+  - Example: `openshift_virt_folder: "test-gauth"` will create all cluster VMs in a folder named "test-gauth"
+  - Use this when deploying multiple clusters or when you want to organize VMs by project/team
+
 ### Add the cluster to the inventory
 Add the cluster to deploy the inventory file *inventory/hosts* in the group *cluster_to_deploy*
 

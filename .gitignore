@@ -17,3 +17,5 @@ clusters_data
 common_tasks
 .DS_Store
 *.lock
+.bob
+.ansible
